@@ -1,0 +1,12 @@
+rootProject.name = 'bmf'
+
+include 'bmf-common'
+include 'bmf-core'
+include 'bmf-api'
+
+include 'bmf-services:analytics-service'
+include 'bmf-services:notification-service'
+include 'bmf-services:payment-service'
+
+include 'bmf-telegram-admin'
+include 'bmf-telegram-tenant'

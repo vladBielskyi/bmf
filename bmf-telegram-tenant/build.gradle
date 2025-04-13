@@ -1,0 +1,15 @@
+plugins {
+    id 'org.springframework.boot'
+}
+
+dependencies {
+    implementation project(':bmf-core')
+    implementation project(':bmf-services:notification-service')
+    implementation project(':bmf-services:payment-service')
+
+    implementation 'org.telegram:telegrambots-spring-boot-starter:6.9.7.1'
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+}
