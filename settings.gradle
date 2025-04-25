@@ -1,4 +1,4 @@
-rootProject.name = 'bmf'
+rootProject.name = 'bmf-api'
 
 include 'bmf-common'
 include 'bmf-core'
@@ -8,5 +8,6 @@ include 'bmf-services:analytics-service'
 include 'bmf-services:notification-service'
 include 'bmf-services:payment-service'
 
-include 'bmf-telegram-admin'
-include 'bmf-telegram-tenant'
+include 'bmf-tg-admin'
+include 'bmf-tg-driver'
+include 'bmf-tg-tenant'

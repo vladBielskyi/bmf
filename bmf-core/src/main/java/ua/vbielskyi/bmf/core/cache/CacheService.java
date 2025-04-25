@@ -1,7 +1,5 @@
 package ua.vbielskyi.bmf.core.cache;
 
-import org.springframework.data.redis.cache.CacheStatistics;
-
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -101,10 +99,4 @@ public interface CacheService {
      * @return True if key exists, false otherwise
      */
     boolean exists(String key, UUID tenantId);
-
-    /**
-     * Get cache statistics
-     * @return Cache statistics
-     */
-    CacheStatistics getStatistics();
 }
