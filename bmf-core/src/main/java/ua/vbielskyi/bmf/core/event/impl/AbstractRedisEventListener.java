@@ -21,7 +21,6 @@ import java.util.UUID;
 abstract class AbstractRedisEventListener implements RedisEventListener {
     private final ObjectMapper objectMapper;
     private final List<String> eventTypes;
-    private final String description;
 
     @Override
     public void onMessage(Message message, byte[] pattern) {
@@ -62,10 +61,5 @@ abstract class AbstractRedisEventListener implements RedisEventListener {
         channels.add(new ChannelTopic(RedisEventPublisher.EVENT_CHANNEL_PREFIX + "*"));
 
         return channels;
-    }
-
-    @Override
-    public String getDescription() {
-        return description;
     }
 }

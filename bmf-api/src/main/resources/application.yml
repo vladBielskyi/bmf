@@ -1,0 +1,30 @@
+spring:
+ application:
+  name: bmf-api
+ datasource:
+  url: jdbc:postgresql://localhost:5432/bmf
+  username: postgres
+  password: vlad
+  driver-class-name: org.postgresql.Driver
+  hikari:
+   connection-timeout: 20000
+   maximum-pool-size: 10
+   minimum-idle: 5
+   idle-timeout: 300000
+   pool-name: BmfHikariPool
+ data:
+   redis:
+    host: localhost
+    port: 6379
+    password:
+    timeout: 2000
+ jpa:
+  hibernate:
+   ddl-auto: update  # Use 'validate' in production
+  show-sql: true
+  properties:
+   hibernate:
+    dialect: org.hibernate.dialect.PostgreSQLDialect
+    format_sql: true
+    jdbc:
+     time_zone: UTC

@@ -32,10 +32,4 @@ public interface RedisEventListener extends MessageListener {
     default void unregister(RedisMessageListenerContainer container) {
         container.removeMessageListener(this);
     }
-
-    /**
-     * Get description of this listener for logging
-     * @return Listener description
-     */
-    String getDescription();
 }

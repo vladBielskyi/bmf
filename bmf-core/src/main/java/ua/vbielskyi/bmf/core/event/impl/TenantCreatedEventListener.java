@@ -11,8 +11,8 @@ import java.util.UUID;
 @Component
 public class TenantCreatedEventListener extends AbstractRedisEventListener{
 
-    public TenantCreatedEventListener(ObjectMapper objectMapper, List<String> eventTypes, String description) {
-        super(objectMapper, eventTypes, description);
+    public TenantCreatedEventListener(ObjectMapper objectMapper, List<String> eventTypes) {
+        super(objectMapper, eventTypes);
     }
 
     @Override
