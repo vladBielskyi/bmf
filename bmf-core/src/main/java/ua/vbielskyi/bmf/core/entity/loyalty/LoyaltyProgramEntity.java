@@ -1,4 +1,4 @@
-package ua.vbielskyi.bmf.core.entity.customer;
+package ua.vbielskyi.bmf.core.entity.loyalty;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -7,16 +7,17 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import ua.vbielskyi.bmf.core.tenant.entity.TenantAware;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "customers")
+@Table(name = "loyalty_programs")
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class CustomerEntity implements TenantAware {
+public class LoyaltyProgramEntity implements TenantAware {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -25,32 +26,17 @@ public class CustomerEntity implements TenantAware {
     @Column(name = "tenant_id", nullable = false)
     private UUID tenantId;
 
-    @Column(name = "telegram_id", nullable = false)
-    private Long telegramId;
-
-    @Column(name = "telegram_username")
-    private String telegramUsername;
-
-    @Column(name = "first_name")
-    private String firstName;
-
-    @Column(name = "last_name")
-    private String lastName;
+    @Column(nullable = false)
+    private String name;
 
     @Column
-    private String email;
-
-    @Column
-    private String phone;
-
-    @Column(name = "loyalty_points")
-    private Integer loyaltyPoints;
-
-    @Column(name = "preferred_language")
-    private String preferredLanguage;
+    private String description;
 
     @Column(name = "is_active", nullable = false)
     private boolean active;
+
+    @Column(name = "points_per_currency", precision = 10, scale = 2)
+    private BigDecimal pointsPerCurrency;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;

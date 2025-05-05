@@ -70,7 +70,7 @@ public class BotStartupRegistrar {
             maxAttempts = 3,
             backoff = @Backoff(delay = 1000, multiplier = 2)
     )
-    private void registerAdminBot() {
+    protected void registerAdminBot() {
         log.info("Registering admin bot");
 
         // Check if admin bot is already registered

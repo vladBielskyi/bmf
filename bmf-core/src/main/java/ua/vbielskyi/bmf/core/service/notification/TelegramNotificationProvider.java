@@ -8,6 +8,7 @@ import ua.vbielskyi.bmf.core.telegram.model.BotType;
 import ua.vbielskyi.bmf.core.telegram.service.BotExecutor;
 import ua.vbielskyi.bmf.core.telegram.service.impl.CachedBotRegistry;
 
+import java.util.Map;
 import java.util.UUID;
 
 /**

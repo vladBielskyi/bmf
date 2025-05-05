@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ua.vbielskyi.bmf.common.model.order.OrderStatus;
 import ua.vbielskyi.bmf.core.entity.order.OrderEntity;
 import ua.vbielskyi.bmf.core.entity.order.OrderStatusHistoryEntity;
+import ua.vbielskyi.bmf.core.exception.ResourceNotFoundException;
 import ua.vbielskyi.bmf.core.repository.order.OrderRepository;
 import ua.vbielskyi.bmf.core.repository.order.OrderStatusHistoryRepository;
 import ua.vbielskyi.bmf.core.service.notification.NotificationService;
