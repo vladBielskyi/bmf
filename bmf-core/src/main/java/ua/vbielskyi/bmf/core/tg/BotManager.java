@@ -1,14 +1,13 @@
-package ua.vbielskyi.bmf.core.tg.service;
+package ua.vbielskyi.bmf.core.tg;
 
 import ua.vbielskyi.bmf.core.tg.model.BotType;
 
 import java.util.UUID;
 
 /**
- * Core service interface for registering bots with Telegram
+ * Interface for managing bot lifecycle
  */
-public interface BotRegistrationService {
-
+public interface BotManager {
     /**
      * Register a bot with Telegram
      *
@@ -18,7 +17,7 @@ public interface BotRegistrationService {
      * @param tenantId Tenant ID (null for admin bot)
      * @return True if registration was successful
      */
-    boolean registerBot(BotType botType, String token, String username, String webhookUrl, UUID tenantId);
+    boolean registerBot(String token, String username, String webhookUrl, UUID tenantId);
 
     /**
      * Unregister a bot from Telegram
@@ -38,4 +37,19 @@ public interface BotRegistrationService {
      * @return True if update was successful
      */
     boolean updateWebhook(String token, String newWebhookUrl, UUID tenantId);
+
+    /**
+     * Check if a bot is registered
+     *
+     * @param token Bot token
+     * @return True if bot is registered
+     */
+    boolean isBotRegistered(String token);
+
+    /**
+     * Get bot type (admin or tenant)
+     *
+     * @return Bot type identifier
+     */
+    BotType getBotType();
 }

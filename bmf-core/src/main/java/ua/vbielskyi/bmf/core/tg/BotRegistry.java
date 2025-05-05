@@ -1,32 +1,34 @@
 package ua.vbielskyi.bmf.core.tg;
 
-import ua.vbielskyi.bmf.core.tg.service.BotProcessorService;
-
 import java.util.List;
 import java.util.UUID;
+import ua.vbielskyi.bmf.core.tg.handler.BotUpdateHandler;
+import ua.vbielskyi.bmf.core.tg.model.BotType;
 
+/**
+ * Registry for bot handlers
+ */
 public interface BotRegistry {
+    /**
+     * Register a bot update handler
+     *
+     * @param handler The handler to register
+     */
+    void registerHandler(BotUpdateHandler handler);
 
     /**
-     * Register a bot processor
+     * Find a handler that can handle updates for this bot type and tenant
      *
-     * @param processor The processor to register
+     * @param botType The bot type (admin or tenant)
+     * @param tenantId Tenant ID (null for admin bot)
+     * @return Handler or null if none found
      */
-    void registerProcessor(BotProcessorService processor);
+    BotUpdateHandler findHandler(BotType botType, UUID tenantId);
 
     /**
-     * Find a processor that can handle this update
+     * Get all registered handlers
      *
-     * @param processorType The processor type
-     * @param tenantId Tenant ID
-     * @return Processor or null if none found
+     * @return List of handlers
      */
-    BotProcessorService findProcessor(String processorType, UUID tenantId);
-
-    /**
-     * Get all registered processors
-     *
-     * @return List of processors
-     */
-    List<BotProcessorService> getAllProcessors();
+    List<BotUpdateHandler> getAllHandlers();
 }

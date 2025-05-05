@@ -1,114 +1,101 @@
-package ua.vbielskyi.bmf.tg.tenant.service;
+package ua.vbielskyi.bmf.tg.admin.handler;
 
+import java.util.UUID;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import ua.vbielskyi.bmf.core.tg.service.BotProcessorService;
+import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
+import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.objects.Update;
+import ua.vbielskyi.bmf.core.tg.BotRegistry;
+import ua.vbielskyi.bmf.core.tg.handler.BotUpdateHandler;
+import ua.vbielskyi.bmf.core.tg.model.BotType;
+import ua.vbielskyi.bmf.tg.admin.command.CommandHandler;
+import ua.vbielskyi.bmf.tg.admin.command.CallbackQueryHandler;
+import ua.vbielskyi.bmf.tg.admin.model.UserSession;
+import ua.vbielskyi.bmf.tg.admin.service.UserSessionService;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class TenantBotProcessor implements BotProcessorService {
+public class AdminBotHandler implements BotUpdateHandler {
 
-    public static final String PROCESSOR_TYPE = "tenant";
-
-    private final CustomerSessionService sessionService;
+    private final BotRegistry botRegistry;
+    private final UserSessionService sessionService;
     private final CommandHandler commandHandler;
     private final MessageHandler messageHandler;
-    private final WebAppHandler webAppHandler;
-    private final BotRegistry botRegistry;
+    private final CallbackQueryHandler callbackQueryHandler;
 
     @PostConstruct
     public void init() {
-        // Register this processor with the registry
-        botRegistry.registerProcessor(this);
-        log.info("Registered tenant bot processor");
+        botRegistry.registerHandler(this);
+        log.info("Registered admin bot handler");
     }
 
     @Override
-    public String getProcessorType() {
-        return PROCESSOR_TYPE;
-    }
-
-    @Override
-    public BotApiMethod<?> processUpdate(Update update, UUID tenantId) {
-        if (tenantId == null) {
-            log.error("Tenant ID cannot be null for tenant bot");
-            return null;
-        }
-
+    public BotApiMethod<?> handleUpdate(Update update, UUID tenantId) {
         try {
-            // Set tenant context
-            TenantContext.setCurrentTenant(tenantId);
-
             // Extract user ID
             Long userId = extractUserId(update);
             if (userId == null) {
-                log.warn("Received update without user ID for tenant {}", tenantId);
+                log.warn("Received update without user ID");
                 return null;
             }
 
             // Extract chat ID
             Long chatId = extractChatId(update);
             if (chatId == null) {
-                log.warn("Received update without chat ID for tenant {}", tenantId);
+                log.warn("Received update without chat ID");
                 return null;
             }
 
             // Get or create session
-            CustomerSession session = sessionService.getOrCreateSession(userId, tenantId);
-            session.setChatId(chatId);
+            UserSession session = sessionService.getOrCreateSession(userId);
 
             // Update user info if available
             updateUserInfo(update, session);
 
             // Process the update based on type
-            BotApiMethod<?> response = processUpdateByType(update, session, tenantId);
+            BotApiMethod<?> response;
+            if (update.hasMessage()) {
+                if (update.getMessage().hasText()) {
+                    // Handle commands
+                    if (update.getMessage().getText().startsWith("/")) {
+                        response = commandHandler.handle(update, session);
+                    } else {
+                        // Handle regular messages
+                        response = messageHandler.handle(update, session);
+                    }
+                } else {
+                    // Handle other types
+                    response = createErrorResponse(update);
+                }
+            } else if (update.hasCallbackQuery()) {
+                // Handle button callbacks
+                response = callbackQueryHandler.handle(update, session);
+            } else {
+                response = createErrorResponse(update);
+            }
 
             // Save session
             sessionService.saveSession(session);
 
             return response;
         } catch (Exception e) {
-            log.error("Error processing update for tenant {}", tenantId, e);
+            log.error("Error processing admin bot update", e);
             return createErrorResponse(update);
-        } finally {
-            // Clear tenant context
-            TenantContext.clear();
         }
     }
 
     @Override
-    public boolean canHandle(String processorType, UUID tenantId) {
-        return PROCESSOR_TYPE.equals(processorType) && tenantId != null;
+    public boolean canHandle(BotType botType, UUID tenantId) {
+        return botType == BotType.ADMIN && tenantId == null;
     }
 
-    /**
-     * Process an update based on its type
-     */
-    private BotApiMethod<?> processUpdateByType(Update update, CustomerSession session, UUID tenantId) {
-        if (update.hasMessage()) {
-            if (update.getMessage().hasText()) {
-                // Handle commands
-                if (update.getMessage().getText().startsWith("/")) {
-                    return commandHandler.handleCommand(tenantId, update);
-                } else {
-                    // Handle regular messages
-                    return messageHandler.handleMessage(tenantId, update);
-                }
-            } else if (update.getMessage().hasPhoto() || update.getMessage().hasDocument()) {
-                // Handle media messages
-                return messageHandler.handleMedia(tenantId, update);
-            } else if (update.getMessage().hasWebAppData()) {
-                // Handle WebApp data
-                return webAppHandler.handleWebAppData(tenantId, update);
-            }
-        } else if (update.hasCallbackQuery()) {
-            // Handle button callbacks
-            return messageHandler.handleCallback(tenantId, update);
-        }
-
-        return createErrorResponse(update);
+    @Override
+    public BotType getBotType() {
+        return BotType.ADMIN;
     }
 
     /**
@@ -138,7 +125,7 @@ public class TenantBotProcessor implements BotProcessorService {
     /**
      * Update user info in the session
      */
-    private void updateUserInfo(Update update, CustomerSession session) {
+    private void updateUserInfo(Update update, UserSession session) {
         if (update.hasMessage() && update.getMessage().getFrom() != null) {
             session.setUsername(update.getMessage().getFrom().getUserName());
             session.setFirstName(update.getMessage().getFrom().getFirstName());

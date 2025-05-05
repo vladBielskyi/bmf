@@ -5,6 +5,7 @@ import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import ua.vbielskyi.bmf.core.tg.model.BotType;
 
 import java.util.UUID;
 
@@ -34,5 +35,5 @@ public class BotRegistrationRequest {
     /**
      * Bot type (admin or tenant)
      */
-    private String botType;
+    private BotType botType;
 }

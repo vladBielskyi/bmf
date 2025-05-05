@@ -157,8 +157,7 @@ public class RedisCacheServiceImpl implements CacheService {
     @Override
     public boolean exists(String key, UUID tenantId) {
         String cacheKey = buildTenantKey(key, tenantId);
-        Boolean exists = redisTemplate.hasKey(cacheKey);
-        return Boolean.TRUE.equals(exists);
+        return redisTemplate.hasKey(cacheKey);
     }
 
     // ========== General (non-tenant-specific) cache operations ==========

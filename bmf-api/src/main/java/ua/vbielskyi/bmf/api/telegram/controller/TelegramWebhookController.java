@@ -1,5 +1,6 @@
 package ua.vbielskyi.bmf.api.telegram.controller;
 
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -10,10 +11,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.objects.Update;
-import ua.vbielskyi.bmf.core.tg.BotRegistry;
-import ua.vbielskyi.bmf.core.tg.service.BotProcessorService;
-
-import java.util.UUID;
+import ua.vbielskyi.bmf.core.tg.handler.BotUpdateHandler;
+import ua.vbielskyi.bmf.core.tg.model.BotType;
+import ua.vbielskyi.bmf.core.tg.service.impl.CachedBotRegistry;
 
 @Slf4j
 @RestController
@@ -21,7 +21,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class TelegramWebhookController {
 
-    private final BotRegistry botRegistry;
+    private final CachedBotRegistry botRegistry;
 
     /**
      * Handle updates for the admin bot
@@ -30,14 +30,21 @@ public class TelegramWebhookController {
     public ResponseEntity<BotApiMethod<?>> handleAdminUpdate(@RequestBody Update update) {
         log.debug("Received update for admin bot: {}", update.getUpdateId());
 
-        BotProcessorService processor = botRegistry.findProcessor("admin", null);
-
-        if (processor == null) {
-            log.error("No processor found for admin bot");
+        // Verify admin bot is registered and active
+        CachedBotRegistry.BotConfig config = botRegistry.getBotConfig(BotType.ADMIN, null);
+        if (config == null || !config.isActive()) {
+            log.error("Admin bot not registered or inactive");
             return ResponseEntity.notFound().build();
         }
 
-        BotApiMethod<?> response = processor.processUpdate(update, null);
+        BotUpdateHandler handler = botRegistry.findHandler(BotType.ADMIN, null);
+
+        if (handler == null) {
+            log.error("No handler found for admin bot");
+            return ResponseEntity.notFound().build();
+        }
+
+        BotApiMethod<?> response = handler.handleUpdate(update, null);
         return ResponseEntity.ok(response);
     }
 
@@ -51,14 +58,26 @@ public class TelegramWebhookController {
 
         log.debug("Received update for tenant {}: {}", tenantId, update.getUpdateId());
 
-        BotProcessorService processor = botRegistry.findProcessor("tenant", tenantId);
-
-        if (processor == null) {
-            log.error("No processor found for tenant: {}", tenantId);
+        // Verify tenant bot is registered and active
+        CachedBotRegistry.BotConfig config = botRegistry.getBotConfig(BotType.TENANT, tenantId);
+        if (config == null) {
+            log.error("No tenant bot configuration found for: {}", tenantId);
             return ResponseEntity.notFound().build();
         }
 
-        BotApiMethod<?> response = processor.processUpdate(update, tenantId);
+        if (!config.isActive()) {
+            log.warn("Received update for inactive tenant bot: {}", tenantId);
+            return ResponseEntity.ok(null); // Silently acknowledge but don't process
+        }
+
+        BotUpdateHandler handler = botRegistry.findHandler(BotType.TENANT, tenantId);
+
+        if (handler == null) {
+            log.error("No handler found for tenant: {}", tenantId);
+            return ResponseEntity.notFound().build();
+        }
+
+        BotApiMethod<?> response = handler.handleUpdate(update, tenantId);
         return ResponseEntity.ok(response);
     }
 }

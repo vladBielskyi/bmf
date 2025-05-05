@@ -1,48 +1,38 @@
 package ua.vbielskyi.bmf.core.tg.service.impl;
 
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import ua.vbielskyi.bmf.core.tg.model.BotType;
-import ua.vbielskyi.bmf.core.tg.service.BotRegistrationService;
+import ua.vbielskyi.bmf.core.tg.BotManager;
 
-import java.util.UUID;
-
-/**
- * Implementation of BotRegistrationService that uses Telegram API
- * and caches bot configurations in Redis
- */
 @Slf4j
-@Service
-public class DefaultBotRegistrationService implements BotRegistrationService {
+public abstract class DefaultBotManager implements BotManager {
 
     private static final String TELEGRAM_API_URL = "https://api.telegram.org/bot";
-
+    private final Map<String, BotInfo> registeredBots = new ConcurrentHashMap<>();
     private final RestTemplate restTemplate;
-    private final CachedBotRegistry botRegistry;
 
-    public DefaultBotRegistrationService(RestTemplate restTemplate, CachedBotRegistry botRegistry) {
+    public DefaultBotManager(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
-        this.botRegistry = botRegistry;
     }
 
     @Override
-    public boolean registerBot(BotType botType, String token, String username, String webhookUrl, UUID tenantId) {
+    public boolean registerBot(String token, String username, String webhookUrl, UUID tenantId) {
         try {
             log.info("Registering bot: {}, tenant: {}", username, tenantId);
 
-            // Set webhook with Telegram
+            // Set webhook
             boolean success = setWebhook(token, webhookUrl);
 
             if (success) {
-
-                // Store in registry cache
-                botRegistry.registerBot(botType, token, username, webhookUrl, tenantId);
-
+                // Store bot info
+                registeredBots.put(token, new BotInfo(username, tenantId, webhookUrl));
                 log.info("Successfully registered bot: {}, tenant: {}", username, tenantId);
             } else {
                 log.error("Failed to set webhook for bot: {}, tenant: {}", username, tenantId);
@@ -58,13 +48,10 @@ public class DefaultBotRegistrationService implements BotRegistrationService {
     @Override
     public boolean unregisterBot(String token, UUID tenantId) {
         try {
-            // Delete webhook with Telegram
             boolean success = deleteWebhook(token);
 
             if (success) {
-                // Remove from registry cache
-                botRegistry.unregisterBot(token, tenantId);
-
+                registeredBots.remove(token);
                 log.info("Successfully unregistered bot, tenant: {}", tenantId);
             } else {
                 log.error("Failed to delete webhook for bot, tenant: {}", tenantId);
@@ -80,27 +67,15 @@ public class DefaultBotRegistrationService implements BotRegistrationService {
     @Override
     public boolean updateWebhook(String token, String newWebhookUrl, UUID tenantId) {
         try {
-            // Get bot config
-            CachedBotRegistry.BotConfig config = botRegistry.getBotConfigByToken(token);
-
-            if (config == null) {
-                log.warn("No bot configuration found for token: {}", token);
-                return false;
-            }
-
-            // Update webhook with Telegram
             boolean success = setWebhook(token, newWebhookUrl);
 
             if (success) {
-                // Update the registry with new webhook URL
-                botRegistry.registerBot(
-                        config.getBotType(),
-                        config.getToken(),
-                        config.getUsername(),
-                        newWebhookUrl,
-                        config.getTenantId()
-                );
-
+                BotInfo info = registeredBots.get(token);
+                if (info != null) {
+                    info.webhookUrl = newWebhookUrl;
+                } else {
+                    registeredBots.put(token, new BotInfo(null, tenantId, newWebhookUrl));
+                }
                 log.info("Successfully updated webhook for bot, tenant: {}", tenantId);
             } else {
                 log.error("Failed to update webhook for bot, tenant: {}", tenantId);
@@ -113,13 +88,14 @@ public class DefaultBotRegistrationService implements BotRegistrationService {
         }
     }
 
-    /**
-     * Set webhook for a bot via Telegram API
-     */
-    private boolean setWebhook(String token, String webhookUrl) {
+    @Override
+    public boolean isBotRegistered(String token) {
+        return registeredBots.containsKey(token);
+    }
+
+    protected boolean setWebhook(String token, String webhookUrl) {
         try {
             String url = TELEGRAM_API_URL + token + "/setWebhook";
-
             HttpHeaders headers = new HttpHeaders();
             headers.set("Content-Type", "application/json");
 
@@ -136,10 +112,7 @@ public class DefaultBotRegistrationService implements BotRegistrationService {
         }
     }
 
-    /**
-     * Delete webhook for a bot via Telegram API
-     */
-    private boolean deleteWebhook(String token) {
+    protected boolean deleteWebhook(String token) {
         try {
             String url = TELEGRAM_API_URL + token + "/deleteWebhook";
             ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
@@ -147,6 +120,18 @@ public class DefaultBotRegistrationService implements BotRegistrationService {
         } catch (Exception e) {
             log.error("Error deleting webhook", e);
             return false;
+        }
+    }
+
+    private static class BotInfo {
+        private final String username;
+        private final UUID tenantId;
+        private String webhookUrl;
+
+        public BotInfo(String username, UUID tenantId, String webhookUrl) {
+            this.username = username;
+            this.tenantId = tenantId;
+            this.webhookUrl = webhookUrl;
         }
     }
 }
