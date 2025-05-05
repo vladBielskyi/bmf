@@ -5,12 +5,18 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
+import ua.vbielskyi.bmf.core.telegram.exception.BotRegistrationException;
 import ua.vbielskyi.bmf.core.telegram.model.BotType;
 import ua.vbielskyi.bmf.core.telegram.service.BotRegistrationService;
 
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Implementation of BotRegistrationService that uses Telegram API
@@ -21,6 +27,8 @@ import java.util.UUID;
 public class DefaultBotRegistrationService implements BotRegistrationService {
 
     private static final String TELEGRAM_API_URL = "https://api.telegram.org/bot";
+    private static final int MAX_RETRIES = 3;
+    private static final long RETRY_DELAY = 1000; // 1 second
 
     private final RestTemplate restTemplate;
     private final CachedBotRegistry botRegistry;
@@ -31,17 +39,33 @@ public class DefaultBotRegistrationService implements BotRegistrationService {
     }
 
     @Override
+    @Retryable(
+            value = {HttpServerErrorException.class, HttpClientErrorException.class},
+            maxAttempts = MAX_RETRIES,
+            backoff = @Backoff(delay = RETRY_DELAY, multiplier = 2)
+    )
     public boolean registerBot(BotType botType, String token, String username, String webhookUrl, UUID tenantId) {
         try {
             log.info("Registering bot: {}, tenant: {}", username, tenantId);
+
+            validateBotToken(token);
+            validateWebhookUrl(webhookUrl);
 
             // Set webhook with Telegram
             boolean success = setWebhook(token, webhookUrl);
 
             if (success) {
-
                 // Store in registry cache
                 botRegistry.registerBot(botType, token, username, webhookUrl, tenantId);
+
+                // Cache expiration
+                if (botType.isTenant()) {
+                    // Tenant bots expire after 24 hours
+                    TimeUnit.HOURS.sleep(24);
+                } else {
+                    // Admin bot doesn't expire
+                    TimeUnit.DAYS.sleep(90);
+                }
 
                 log.info("Successfully registered bot: {}, tenant: {}", username, tenantId);
             } else {
@@ -49,15 +73,32 @@ public class DefaultBotRegistrationService implements BotRegistrationService {
             }
 
             return success;
+        } catch (HttpClientErrorException e) {
+            log.error("Telegram API client error: {}", e.getMessage(), e);
+            throw new BotRegistrationException("Telegram API client error: " + e.getMessage(), e);
+        } catch (HttpServerErrorException e) {
+            log.error("Telegram API server error: {}", e.getMessage(), e);
+            throw new BotRegistrationException("Telegram API server error: " + e.getMessage(), e);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.error("Thread interrupted during bot registration", e);
+            throw new BotRegistrationException("Thread interrupted during bot registration", e);
         } catch (Exception e) {
             log.error("Error registering bot: {}, tenant: {}", username, tenantId, e);
-            return false;
+            throw new BotRegistrationException("Error registering bot: " + e.getMessage(), e);
         }
     }
 
     @Override
+    @Retryable(
+            value = {HttpServerErrorException.class, HttpClientErrorException.class},
+            maxAttempts = MAX_RETRIES,
+            backoff = @Backoff(delay = RETRY_DELAY, multiplier = 2)
+    )
     public boolean unregisterBot(String token, UUID tenantId) {
         try {
+            validateBotToken(token);
+
             // Delete webhook with Telegram
             boolean success = deleteWebhook(token);
 
@@ -71,15 +112,26 @@ public class DefaultBotRegistrationService implements BotRegistrationService {
             }
 
             return success;
+        } catch (HttpClientErrorException | HttpServerErrorException e) {
+            log.error("Telegram API error: {}", e.getMessage(), e);
+            throw new BotRegistrationException("Telegram API error: " + e.getMessage(), e);
         } catch (Exception e) {
             log.error("Error unregistering bot, tenant: {}", tenantId, e);
-            return false;
+            throw new BotRegistrationException("Error unregistering bot: " + e.getMessage(), e);
         }
     }
 
     @Override
+    @Retryable(
+            value = {HttpServerErrorException.class, HttpClientErrorException.class},
+            maxAttempts = MAX_RETRIES,
+            backoff = @Backoff(delay = RETRY_DELAY, multiplier = 2)
+    )
     public boolean updateWebhook(String token, String newWebhookUrl, UUID tenantId) {
         try {
+            validateBotToken(token);
+            validateWebhookUrl(newWebhookUrl);
+
             // Get bot config
             CachedBotRegistry.BotConfig config = botRegistry.getBotConfigByToken(token);
 
@@ -107,9 +159,12 @@ public class DefaultBotRegistrationService implements BotRegistrationService {
             }
 
             return success;
+        } catch (HttpClientErrorException | HttpServerErrorException e) {
+            log.error("Telegram API error: {}", e.getMessage(), e);
+            throw new BotRegistrationException("Telegram API error: " + e.getMessage(), e);
         } catch (Exception e) {
             log.error("Error updating webhook for bot, tenant: {}", tenantId, e);
-            return false;
+            throw new BotRegistrationException("Error updating webhook: " + e.getMessage(), e);
         }
     }
 
@@ -123,16 +178,20 @@ public class DefaultBotRegistrationService implements BotRegistrationService {
             HttpHeaders headers = new HttpHeaders();
             headers.set("Content-Type", "application/json");
 
-            String requestBody = "{\"url\":\"" + webhookUrl + "\"}";
+            String requestBody = "{\"url\":\"" + webhookUrl + "\",\"max_connections\":40,\"allowed_updates\":[\"message\",\"callback_query\",\"inline_query\"]}";
             HttpEntity<String> entity = new HttpEntity<>(requestBody, headers);
 
             ResponseEntity<String> response = restTemplate.exchange(
                     url, HttpMethod.POST, entity, String.class);
 
-            return response.getStatusCode().is2xxSuccessful();
+            boolean success = response.getStatusCode().is2xxSuccessful();
+            if (!success) {
+                log.error("Failed to set webhook. Response: {}", response.getBody());
+            }
+            return success;
         } catch (Exception e) {
             log.error("Error setting webhook", e);
-            return false;
+            throw new BotRegistrationException("Error setting webhook: " + e.getMessage(), e);
         }
     }
 
@@ -143,10 +202,33 @@ public class DefaultBotRegistrationService implements BotRegistrationService {
         try {
             String url = TELEGRAM_API_URL + token + "/deleteWebhook";
             ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
-            return response.getStatusCode().is2xxSuccessful();
+
+            boolean success = response.getStatusCode().is2xxSuccessful();
+            if (!success) {
+                log.error("Failed to delete webhook. Response: {}", response.getBody());
+            }
+            return success;
         } catch (Exception e) {
             log.error("Error deleting webhook", e);
-            return false;
+            throw new BotRegistrationException("Error deleting webhook: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Validate bot token format
+     */
+    private void validateBotToken(String token) {
+        if (token == null || !token.matches("^[0-9]{9}:[a-zA-Z0-9_-]{35}$")) {
+            throw new BotRegistrationException("Invalid bot token format");
+        }
+    }
+
+    /**
+     * Validate webhook URL
+     */
+    private void validateWebhookUrl(String webhookUrl) {
+        if (webhookUrl == null || !webhookUrl.startsWith("https://")) {
+            throw new BotRegistrationException("Webhook URL must start with https://");
         }
     }
 }

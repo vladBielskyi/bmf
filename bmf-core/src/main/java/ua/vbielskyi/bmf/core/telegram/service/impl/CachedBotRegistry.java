@@ -5,8 +5,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import ua.vbielskyi.bmf.core.cache.CacheService;
+import ua.vbielskyi.bmf.core.telegram.exception.BotRegistryException;
 import ua.vbielskyi.bmf.core.telegram.BotRegistry;
 import ua.vbielskyi.bmf.core.telegram.handler.BotHandler;
 import ua.vbielskyi.bmf.core.telegram.model.BotType;
@@ -26,7 +28,9 @@ public class CachedBotRegistry implements BotRegistry {
     private static final String BOT_CONFIG_KEY_PREFIX = "bmf:bot:config:";
     private static final String BOT_TOKEN_KEY_PREFIX = "bmf:bot:token:";
     private static final String TENANT_BOTS_KEY = "bmf:tenant:bots";
-    private static final long CACHE_EXPIRATION = 24 * 60 * 60; // 24 hours
+
+    @Value("${bot.cache.expiration:86400}")
+    private long cacheExpiration; // Default: 24 hours
 
     private final List<BotHandler> handlers = new CopyOnWriteArrayList<>();
     private final CacheService cacheService;
@@ -39,17 +43,31 @@ public class CachedBotRegistry implements BotRegistry {
 
     @Override
     public void registerHandler(BotHandler handler) {
+        if (handler == null) {
+            throw new IllegalArgumentException("Handler cannot be null");
+        }
+
         handlers.add(handler);
-        log.info("Registered bot handler: {}", handler.getBotType());
+        log.info("Registered bot handler for type: {}", handler.getBotType());
     }
 
     @Override
     public BotHandler findHandler(BotType botType, UUID tenantId) {
+        if (botType == null) {
+            log.warn("Bot type is null");
+            return null;
+        }
+
         // First check if bot is registered and active for tenant bots
         if (tenantId != null) {
             BotConfig config = getBotConfig(botType, tenantId);
-            if (config == null || !config.isActive()) {
-                log.warn("No active bot configuration found for tenant: {}", tenantId);
+            if (config == null) {
+                log.warn("No bot configuration found for tenant: {}", tenantId);
+                return null;
+            }
+
+            if (!config.isActive()) {
+                log.warn("Bot for tenant {} is not active", tenantId);
                 return null;
             }
         }
@@ -82,6 +100,8 @@ public class CachedBotRegistry implements BotRegistry {
      */
     public boolean registerBot(BotType botType, String token, String username, String webhookUrl, UUID tenantId) {
         try {
+            validateBotParameters(botType, token, username, webhookUrl);
+
             BotConfig config = new BotConfig(botType, token, username, webhookUrl, tenantId);
             String json = objectMapper.writeValueAsString(config);
 
@@ -89,8 +109,8 @@ public class CachedBotRegistry implements BotRegistry {
             String configKey = getBotConfigKey(botType, tenantId);
             String tokenKey = BOT_TOKEN_KEY_PREFIX + token;
 
-            cacheService.put(configKey, json, CACHE_EXPIRATION, TimeUnit.SECONDS);
-            cacheService.put(tokenKey, json, CACHE_EXPIRATION, TimeUnit.SECONDS);
+            cacheService.put(configKey, json, cacheExpiration, TimeUnit.SECONDS);
+            cacheService.put(tokenKey, json, cacheExpiration, TimeUnit.SECONDS);
 
             // For tenant bots, add to the list of tenant bots
             if (tenantId != null) {
@@ -101,7 +121,10 @@ public class CachedBotRegistry implements BotRegistry {
             return true;
         } catch (JsonProcessingException e) {
             log.error("Failed to serialize bot config", e);
-            return false;
+            throw new BotRegistryException("Failed to serialize bot config", e);
+        } catch (Exception e) {
+            log.error("Error registering bot", e);
+            throw new BotRegistryException("Error registering bot", e);
         }
     }
 
@@ -113,27 +136,32 @@ public class CachedBotRegistry implements BotRegistry {
      * @return true if unregistration was successful
      */
     public boolean unregisterBot(String token, UUID tenantId) {
-        // Get bot config by token
-        BotConfig config = getBotConfigByToken(token);
-        if (config == null) {
-            log.warn("No bot configuration found for token: {}", token);
-            return false;
+        try {
+            // Get bot config by token
+            BotConfig config = getBotConfigByToken(token);
+            if (config == null) {
+                log.warn("No bot configuration found for token: {}", token);
+                return false;
+            }
+
+            // Remove from cache
+            String configKey = getBotConfigKey(config.getBotType(), config.getTenantId());
+            String tokenKey = BOT_TOKEN_KEY_PREFIX + token;
+
+            cacheService.remove(configKey);
+            cacheService.remove(tokenKey);
+
+            // For tenant bots, remove from the list of tenant bots
+            if (config.getTenantId() != null) {
+                updateTenantsList(config.getTenantId(), false);
+            }
+
+            log.info("Unregistered bot for tenant: {}", tenantId);
+            return true;
+        } catch (Exception e) {
+            log.error("Error unregistering bot", e);
+            throw new BotRegistryException("Error unregistering bot", e);
         }
-
-        // Remove from cache
-        String configKey = getBotConfigKey(config.getBotType(), config.getTenantId());
-        String tokenKey = BOT_TOKEN_KEY_PREFIX + token;
-
-        cacheService.remove(configKey);
-        cacheService.remove(tokenKey);
-
-        // For tenant bots, remove from the list of tenant bots
-        if (config.getTenantId() != null) {
-            updateTenantsList(config.getTenantId(), false);
-        }
-
-        log.info("Unregistered bot for tenant: {}", tenantId);
-        return true;
     }
 
     /**
@@ -145,28 +173,31 @@ public class CachedBotRegistry implements BotRegistry {
      * @return true if update was successful
      */
     public boolean updateBotActiveStatus(BotType botType, UUID tenantId, boolean active) {
-        BotConfig config = getBotConfig(botType, tenantId);
-        if (config == null) {
-            log.warn("No bot configuration found for botType: {}, tenantId: {}", botType, tenantId);
-            return false;
-        }
-
-        config.setActive(active);
-
         try {
+            BotConfig config = getBotConfig(botType, tenantId);
+            if (config == null) {
+                log.warn("No bot configuration found for botType: {}, tenantId: {}", botType, tenantId);
+                return false;
+            }
+
+            config.setActive(active);
+
             String json = objectMapper.writeValueAsString(config);
             String configKey = getBotConfigKey(botType, tenantId);
             String tokenKey = BOT_TOKEN_KEY_PREFIX + config.getToken();
 
-            cacheService.put(configKey, json, CACHE_EXPIRATION, TimeUnit.SECONDS);
-            cacheService.put(tokenKey, json, CACHE_EXPIRATION, TimeUnit.SECONDS);
+            cacheService.put(configKey, json, cacheExpiration, TimeUnit.SECONDS);
+            cacheService.put(tokenKey, json, cacheExpiration, TimeUnit.SECONDS);
 
             log.info("Updated bot active status to {} for botType: {}, tenantId: {}",
                     active, botType, tenantId);
             return true;
         } catch (JsonProcessingException e) {
             log.error("Failed to serialize bot config", e);
-            return false;
+            throw new BotRegistryException("Failed to serialize bot config", e);
+        } catch (Exception e) {
+            log.error("Error updating bot active status", e);
+            throw new BotRegistryException("Error updating bot active status", e);
         }
     }
 
@@ -178,10 +209,15 @@ public class CachedBotRegistry implements BotRegistry {
      * @return Bot configuration or null if not found
      */
     public BotConfig getBotConfig(BotType botType, UUID tenantId) {
-        String configKey = getBotConfigKey(botType, tenantId);
-        return cacheService.get(configKey, String.class)
-                .map(this::deserializeBotConfig)
-                .orElse(null);
+        try {
+            String configKey = getBotConfigKey(botType, tenantId);
+            return cacheService.get(configKey, String.class)
+                    .map(this::deserializeBotConfig)
+                    .orElse(null);
+        } catch (Exception e) {
+            log.error("Error getting bot config", e);
+            return null;
+        }
     }
 
     /**
@@ -191,10 +227,15 @@ public class CachedBotRegistry implements BotRegistry {
      * @return Bot configuration or null if not found
      */
     public BotConfig getBotConfigByToken(String token) {
-        String tokenKey = BOT_TOKEN_KEY_PREFIX + token;
-        return cacheService.get(tokenKey, String.class)
-                .map(this::deserializeBotConfig)
-                .orElse(null);
+        try {
+            String tokenKey = BOT_TOKEN_KEY_PREFIX + token;
+            return cacheService.get(tokenKey, String.class)
+                    .map(this::deserializeBotConfig)
+                    .orElse(null);
+        } catch (Exception e) {
+            log.error("Error getting bot config by token", e);
+            return null;
+        }
     }
 
     /**
@@ -205,16 +246,21 @@ public class CachedBotRegistry implements BotRegistry {
     public Map<UUID, BotConfig> getAllTenantBotConfigs() {
         Map<UUID, BotConfig> result = new HashMap<>();
 
-        // Get the list of tenant IDs
-        cacheService.get(TENANT_BOTS_KEY, String.class)
-                .map(this::deserializeTenantsList)
-                .orElse(new ArrayList<>())
-                .forEach(tenantId -> {
-                    BotConfig config = getBotConfig(BotType.TENANT, tenantId);
-                    if (config != null) {
-                        result.put(tenantId, config);
-                    }
-                });
+        try {
+            // Get the list of tenant IDs
+            List<UUID> tenantIds = cacheService.get(TENANT_BOTS_KEY, String.class)
+                    .map(this::deserializeTenantsList)
+                    .orElse(new ArrayList<>());
+
+            for (UUID tenantId : tenantIds) {
+                BotConfig config = getBotConfig(BotType.TENANT, tenantId);
+                if (config != null) {
+                    result.put(tenantId, config);
+                }
+            }
+        } catch (Exception e) {
+            log.error("Error getting all tenant bot configs", e);
+        }
 
         return result;
     }
@@ -226,23 +272,59 @@ public class CachedBotRegistry implements BotRegistry {
      * @param add Whether to add or remove
      */
     private void updateTenantsList(UUID tenantId, boolean add) {
-        List<UUID> tenantIds = cacheService.get(TENANT_BOTS_KEY, String.class)
-                .map(this::deserializeTenantsList)
-                .orElse(new ArrayList<>());
-
-        if (add && !tenantIds.contains(tenantId)) {
-            tenantIds.add(tenantId);
-        } else if (!add) {
-            tenantIds.remove(tenantId);
-        } else {
-            return; // No change needed
-        }
-
         try {
-            String json = objectMapper.writeValueAsString(tenantIds);
-            cacheService.put(TENANT_BOTS_KEY, json, CACHE_EXPIRATION, TimeUnit.SECONDS);
+            List<UUID> tenantIds = cacheService.get(TENANT_BOTS_KEY, String.class)
+                    .map(this::deserializeTenantsList)
+                    .orElse(new ArrayList<>());
+
+            boolean changed = false;
+            if (add && !tenantIds.contains(tenantId)) {
+                tenantIds.add(tenantId);
+                changed = true;
+            } else if (!add) {
+                changed = tenantIds.remove(tenantId);
+            }
+
+            if (changed) {
+                String json = objectMapper.writeValueAsString(tenantIds);
+                cacheService.put(TENANT_BOTS_KEY, json, cacheExpiration, TimeUnit.SECONDS);
+                log.debug("Updated tenant list, operation: {}, tenant: {}", add ? "add" : "remove", tenantId);
+            }
         } catch (JsonProcessingException e) {
             log.error("Failed to serialize tenant list", e);
+            throw new BotRegistryException("Failed to serialize tenant list", e);
+        } catch (Exception e) {
+            log.error("Error updating tenant list", e);
+            throw new BotRegistryException("Error updating tenant list", e);
+        }
+    }
+
+    /**
+     * Validate bot parameters
+     */
+    private void validateBotParameters(BotType botType, String token, String username, String webhookUrl) {
+        if (botType == null) {
+            throw new IllegalArgumentException("Bot type cannot be null");
+        }
+
+        if (token == null || token.isEmpty()) {
+            throw new IllegalArgumentException("Bot token cannot be null or empty");
+        }
+
+        if (!token.matches("^[0-9]{9}:[a-zA-Z0-9_-]{35}$")) {
+            throw new IllegalArgumentException("Invalid bot token format");
+        }
+
+        if (username == null || username.isEmpty()) {
+            throw new IllegalArgumentException("Bot username cannot be null or empty");
+        }
+
+        if (webhookUrl == null || webhookUrl.isEmpty()) {
+            throw new IllegalArgumentException("Webhook URL cannot be null or empty");
+        }
+
+        if (!webhookUrl.startsWith("https://")) {
+            throw new IllegalArgumentException("Webhook URL must use HTTPS");
         }
     }
 
@@ -304,9 +386,13 @@ public class CachedBotRegistry implements BotRegistry {
         private String webhookUrl;
         private UUID tenantId;
         private boolean active = true;
+        private long createdAt;
+        private long lastUpdatedAt;
 
         public BotConfig() {
             // Default constructor for Jackson
+            this.createdAt = System.currentTimeMillis();
+            this.lastUpdatedAt = System.currentTimeMillis();
         }
 
         public BotConfig(BotType botType, String token, String username, String webhookUrl, UUID tenantId) {
@@ -315,7 +401,8 @@ public class CachedBotRegistry implements BotRegistry {
             this.username = username;
             this.webhookUrl = webhookUrl;
             this.tenantId = tenantId;
+            this.createdAt = System.currentTimeMillis();
+            this.lastUpdatedAt = System.currentTimeMillis();
         }
-
     }
 }
