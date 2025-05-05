@@ -29,10 +29,6 @@ public class UserSession implements Serializable {
     private LocalDateTime lastActivity;
     private String language;
 
-    // Flow data
-    private RegistrationData registrationData;
-    private ShopSetupData shopSetupData;
-
     // Current context
     private Long currentShopId;
     private Tenant currentShop;
@@ -40,13 +36,6 @@ public class UserSession implements Serializable {
     // Additional data
     private Map<String, Object> attributes = new HashMap<>();
 
-    /**
-     * Check if this is a new user
-     * @return true if this is a new session
-     */
-    public boolean isNewUser() {
-        return registrationData == null || registrationData.isConfirmed() == null || !registrationData.isConfirmed();
-    }
 
     /**
      * Check if user is in registration flow

@@ -11,9 +11,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ua.vbielskyi.bmf.api.telegram.dto.BotRegistrationRequest;
 import ua.vbielskyi.bmf.api.telegram.dto.BotRegistrationResponse;
-import ua.vbielskyi.bmf.core.tg.model.BotType;
-import ua.vbielskyi.bmf.core.tg.service.BotRegistrationService;
-import ua.vbielskyi.bmf.core.tg.service.impl.CachedBotRegistry;
+import ua.vbielskyi.bmf.core.telegram.model.BotType;
+import ua.vbielskyi.bmf.core.telegram.service.BotRegistrationService;
+import ua.vbielskyi.bmf.core.telegram.service.impl.CachedBotRegistry;
 
 @Slf4j
 @RestController

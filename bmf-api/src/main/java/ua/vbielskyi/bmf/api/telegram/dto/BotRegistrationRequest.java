@@ -5,7 +5,7 @@ import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import ua.vbielskyi.bmf.core.tg.model.BotType;
+import ua.vbielskyi.bmf.core.telegram.model.BotType;
 
 import java.util.UUID;
 

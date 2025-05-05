@@ -3,7 +3,7 @@ package ua.vbielskyi.bmf.common.model.order;
 import lombok.Getter;
 
 @Getter
-enum PaymentStatus {
+public enum PaymentStatus {
     PENDING("Payment pending"),
     PROCESSING("Payment processing"),
     COMPLETED("Payment completed"),

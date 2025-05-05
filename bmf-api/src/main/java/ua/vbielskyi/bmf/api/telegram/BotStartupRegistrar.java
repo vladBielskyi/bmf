@@ -6,9 +6,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
-import ua.vbielskyi.bmf.common.model.tenant.Tenant;
-import ua.vbielskyi.bmf.core.tg.model.BotType;
-import ua.vbielskyi.bmf.core.tg.service.BotRegistrationService;
+import ua.vbielskyi.bmf.core.entity.tenant.TenantEntity;
+import ua.vbielskyi.bmf.core.repository.tenant.TenantRepository;
+import ua.vbielskyi.bmf.core.telegram.model.BotType;
+import ua.vbielskyi.bmf.core.telegram.service.BotRegistrationService;
 
 import java.util.List;
 
@@ -59,10 +60,10 @@ public class BotStartupRegistrar {
     private void registerActiveTenantBots() {
         log.info("Registering active tenant bots");
 
-        List<Tenant> activeTenants = tenantRepository.findAllByActiveTrue();
+        List<TenantEntity> activeTenants = tenantRepository.findAllByActiveTrue();
         int successCount = 0;
 
-        for (Tenant tenant : activeTenants) {
+        for (TenantEntity tenant : activeTenants) {
             String webhookUrl = webhookBaseUrl + "/webhook/tenant/" + tenant.getId();
             boolean success = botRegistrationService.registerBot(
                     BotType.TENANT,

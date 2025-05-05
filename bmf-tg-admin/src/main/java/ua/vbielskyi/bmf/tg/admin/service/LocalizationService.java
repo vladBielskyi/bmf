@@ -15,7 +15,7 @@ import java.util.Locale;
 public class LocalizationService {
 
     private final MessageSource messageSource;
-    private final UserSessionService sessionService;
+    private final AdminSessionService sessionService;
 
     /**
      * Get a localized message for the user
