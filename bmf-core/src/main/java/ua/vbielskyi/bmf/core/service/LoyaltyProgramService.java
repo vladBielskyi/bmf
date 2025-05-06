@@ -1,21 +1,21 @@
-package ua.vbielskyi.bmf.core.service.loyalty;
+package ua.vbielskyi.bmf.core.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ua.vbielskyi.bmf.common.model.loyalty.LoyaltyTransactionType;
 import ua.vbielskyi.bmf.core.entity.customer.CustomerEntity;
 import ua.vbielskyi.bmf.core.entity.loyalty.LoyaltyProgramEntity;
 import ua.vbielskyi.bmf.core.entity.loyalty.LoyaltyTierEntity;
 import ua.vbielskyi.bmf.core.entity.loyalty.LoyaltyTransactionEntity;
-import ua.vbielskyi.bmf.core.entity.loyalty.LoyaltyTransactionType;
 import ua.vbielskyi.bmf.core.entity.order.OrderEntity;
 import ua.vbielskyi.bmf.core.exception.ResourceNotFoundException;
 import ua.vbielskyi.bmf.core.repository.customer.CustomerRepository;
 import ua.vbielskyi.bmf.core.repository.loyalty.LoyaltyProgramRepository;
 import ua.vbielskyi.bmf.core.repository.loyalty.LoyaltyTierRepository;
 import ua.vbielskyi.bmf.core.repository.loyalty.LoyaltyTransactionRepository;
-import ua.vbielskyi.bmf.core.service.notification.NotificationService;
+import ua.vbielskyi.bmf.core.service.NotificationService;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;

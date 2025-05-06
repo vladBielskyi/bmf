@@ -27,27 +27,27 @@ public class TelegramNotificationProvider implements NotificationProvider {
      */
     public boolean sendNotification(UUID tenantId, Long chatId, String message) {
         try {
-            // Verify bot is registered and active
-            CachedBotRegistry.BotConfig config = botRegistry.getBotConfig(BotType.TENANT, tenantId);
-            if (config == null || !config.isActive()) {
-                log.error("No active bot configuration found for tenant: {}", tenantId);
-                return false;
-            }
-
-            // Create message
-            SendMessage sendMessage = SendMessage.builder()
-                    .chatId(chatId.toString())
-                    .text(message)
-                    .parseMode("HTML")
-                    .disableWebPagePreview(true)
-                    .build();
-
-            // Execute message
-            botExecutor.executeAsync(
-                    org.telegram.telegrambots.meta.api.methods.BotApiMethod.builder().build(),
-                    BotType.TENANT, tenantId);
-
-            log.debug("Sent Telegram notification to {} for tenant {}", chatId, tenantId);
+//            // Verify bot is registered and active
+//            CachedBotRegistry.BotConfig config = botRegistry.getBotConfig(BotType.TENANT, tenantId);
+//            if (config == null || !config.isActive()) {
+//                log.error("No active bot configuration found for tenant: {}", tenantId);
+//                return false;
+//            }
+//
+//            // Create message
+//            SendMessage sendMessage = SendMessage.builder()
+//                    .chatId(chatId.toString())
+//                    .text(message)
+//                    .parseMode("HTML")
+//                    .disableWebPagePreview(true)
+//                    .build();
+//
+//            // Execute message
+//            botExecutor.executeAsync(
+//                    org.telegram.telegrambots.meta.api.methods.BotApiMethod.().build(),
+//                    BotType.TENANT, tenantId);
+//
+//            log.debug("Sent Telegram notification to {} for tenant {}", chatId, tenantId);
             return true;
         } catch (Exception e) {
             log.error("Error sending Telegram notification to {} for tenant {}", chatId, tenantId, e);

@@ -311,7 +311,7 @@ public class CachedBotRegistry implements BotRegistry {
             throw new IllegalArgumentException("Bot token cannot be null or empty");
         }
 
-        if (!token.matches("^[0-9]{9}:[a-zA-Z0-9_-]{35}$")) {
+        if (!token.matches("^\\d+:AA[A-Za-z0-9_-]{31,}$")) {
             throw new IllegalArgumentException("Invalid bot token format");
         }
 

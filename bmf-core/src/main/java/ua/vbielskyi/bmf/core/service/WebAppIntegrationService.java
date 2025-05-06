@@ -1,4 +1,4 @@
-package ua.vbielskyi.bmf.core.service.webapp;
+package ua.vbielskyi.bmf.core.service;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
@@ -48,7 +48,7 @@ public class WebAppIntegrationService {
         TenantEntity tenant = tenantRepository.findById(tenantId)
                 .orElseThrow(() -> new ResourceNotFoundException("Tenant", "id", tenantId));
 
-        if (!tenant.isActive()) {
+        if (!tenant.getActive()) {
             throw new IllegalStateException("Tenant is not active");
         }
 
@@ -105,7 +105,7 @@ public class WebAppIntegrationService {
             TenantEntity tenant = tenantRepository.findById(tenantId)
                     .orElseThrow(() -> new ResourceNotFoundException("Tenant", "id", tenantId));
 
-            if (!tenant.isActive()) {
+            if (!tenant.getActive()) {
                 throw new IllegalStateException("Tenant is not active");
             }
 

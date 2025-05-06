@@ -218,7 +218,7 @@ public class DefaultBotRegistrationService implements BotRegistrationService {
      * Validate bot token format
      */
     private void validateBotToken(String token) {
-        if (token == null || !token.matches("^[0-9]{9}:[a-zA-Z0-9_-]{35}$")) {
+        if (token == null || !token.matches("^\\d+:AA[A-Za-z0-9_-]{31,}$")) {
             throw new BotRegistrationException("Invalid bot token format");
         }
     }

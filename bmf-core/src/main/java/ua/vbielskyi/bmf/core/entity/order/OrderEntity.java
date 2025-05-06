@@ -92,7 +92,7 @@ public class OrderEntity implements TenantAware {
     private LocalDateTime updatedAt;
 
     @Column(name = "is_deleted", nullable = false)
-    private boolean deleted = false;
+    private Boolean deleted = false;
 
     @Column(name = "created_by")
     private String createdBy;

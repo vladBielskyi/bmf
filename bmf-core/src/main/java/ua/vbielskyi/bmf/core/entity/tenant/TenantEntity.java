@@ -57,7 +57,7 @@ public class TenantEntity {
     private LocalDateTime subscriptionExpiryDate;
 
     @Column(nullable = false)
-    private boolean active;
+    private Boolean active;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;

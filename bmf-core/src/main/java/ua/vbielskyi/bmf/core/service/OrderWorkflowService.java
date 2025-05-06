@@ -1,4 +1,4 @@
-package ua.vbielskyi.bmf.core.service.order;
+package ua.vbielskyi.bmf.core.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -10,7 +10,6 @@ import ua.vbielskyi.bmf.core.entity.order.OrderStatusHistoryEntity;
 import ua.vbielskyi.bmf.core.exception.ResourceNotFoundException;
 import ua.vbielskyi.bmf.core.repository.order.OrderRepository;
 import ua.vbielskyi.bmf.core.repository.order.OrderStatusHistoryRepository;
-import ua.vbielskyi.bmf.core.service.notification.NotificationService;
 
 import java.time.LocalDateTime;
 import java.util.UUID;

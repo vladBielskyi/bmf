@@ -30,7 +30,7 @@ public class TelegramWebhookController {
     public ResponseEntity<BotApiMethod<?>> handleAdminUpdate(@RequestBody Update update) {
         log.debug("Received update for admin bot: {}", update.getUpdateId());
 
-        CachedBotRegistry.BotConfig config = botRegistry.getBotConfig(BotType.ADMIN, null);
+            CachedBotRegistry.BotConfig config = botRegistry.getBotConfig(BotType.ADMIN, null);
         if (config == null || !config.isActive()) {
             log.error("Admin bot not registered or inactive");
             return ResponseEntity.notFound().build();

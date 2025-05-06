@@ -71,11 +71,9 @@ public class BotStartupRegistrar {
             backoff = @Backoff(delay = 1000, multiplier = 2)
     )
     protected void registerAdminBot() {
-        log.info("Registering admin bot");
-
         // Check if admin bot is already registered
         CachedBotRegistry.BotConfig config = botRegistry.getBotConfig(BotType.ADMIN, null);
-        if (config != null) {
+        if (config != null && config.getWebhookUrl().startsWith(webhookBaseUrl)) {
             log.info("Admin bot already registered, skipping registration");
             return;
         }

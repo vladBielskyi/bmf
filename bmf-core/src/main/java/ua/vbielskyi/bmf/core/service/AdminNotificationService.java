@@ -3,8 +3,6 @@ package ua.vbielskyi.bmf.core.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import ua.vbielskyi.bmf.core.entity.notification.AdminNotificationEntity;
-import ua.vbielskyi.bmf.core.repository.notification.AdminNotificationRepository;
 import ua.vbielskyi.bmf.core.telegram.model.BotType;
 
 import java.time.LocalDateTime;
@@ -20,7 +18,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class AdminNotificationService {
 
-    private final AdminNotificationRepository notificationRepository;
+   // private final AdminNotificationRepository notificationRepository;
     private final NotificationService notificationService;
 
     /**
@@ -151,45 +149,45 @@ public class AdminNotificationService {
                                        String message, String type, UUID referenceId) {
         try {
             // Save notification to database
-            AdminNotificationEntity notification = new AdminNotificationEntity();
-            notification.setUserId(telegramId);
-            notification.setTitle(title);
-            notification.setMessage(message);
-            notification.setType(type);
-            notification.setReferenceId(referenceId);
-            notification.setRead(false);
-            notification.setCreatedAt(LocalDateTime.now());
-
-            notificationRepository.save(notification);
-
-            // Send notification via Telegram admin bot
-            notificationService.sendAdminBotNotification(telegramId, title, message);
-
-            log.info("Sent admin notification to {}: type={}, referenceId={}",
-                    telegramId, type, referenceId);
+//            AdminNotificationEntity notification = new AdminNotificationEntity();
+//            notification.setUserId(telegramId);
+//            notification.setTitle(title);
+//            notification.setMessage(message);
+//            notification.setType(type);
+//            notification.setReferenceId(referenceId);
+//            notification.setRead(false);
+//            notification.setCreatedAt(LocalDateTime.now());
+//
+//            notificationRepository.save(notification);
+//
+//            // Send notification via Telegram admin bot
+//            notificationService.sendAdminBotNotification(telegramId, title, message);
+//
+//            log.info("Sent admin notification to {}: type={}, referenceId={}",
+//                    telegramId, type, referenceId);
         } catch (Exception e) {
             log.error("Error sending admin notification to {}", telegramId, e);
         }
     }
 
-    /**
-     * Get unread notifications for a user
-     */
-    public List<AdminNotificationEntity> getUnreadNotifications(Long telegramId) {
-        return notificationRepository.findByUserIdAndReadFalseOrderByCreatedAtDesc(telegramId);
-    }
-
-    /**
-     * Mark notification as read
-     */
-    public void markAsRead(UUID notificationId) {
-        AdminNotificationEntity notification = notificationRepository.findById(notificationId)
-                .orElse(null);
-
-        if (notification != null) {
-            notification.setRead(true);
-            notification.setReadAt(LocalDateTime.now());
-            notificationRepository.save(notification);
-        }
-    }
+//    /**
+//     * Get unread notifications for a user
+//     */
+//    public List<AdminNotificationEntity> getUnreadNotifications(Long telegramId) {
+//        return notificationRepository.findByUserIdAndReadFalseOrderByCreatedAtDesc(telegramId);
+//    }
+//
+//    /**
+//     * Mark notification as read
+//     */
+//    public void markAsRead(UUID notificationId) {
+//        AdminNotificationEntity notification = notificationRepository.findById(notificationId)
+//                .orElse(null);
+//
+//        if (notification != null) {
+//            notification.setRead(true);
+//            notification.setReadAt(LocalDateTime.now());
+//            notificationRepository.save(notification);
+//        }
+//    }
 }

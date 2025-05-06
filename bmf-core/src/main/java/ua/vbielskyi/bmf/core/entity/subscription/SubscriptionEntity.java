@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import ua.vbielskyi.bmf.common.model.subscription.SubscriptionStatus;
 import ua.vbielskyi.bmf.common.model.tenant.SubscriptionPlan;
 
 import java.time.LocalDateTime;

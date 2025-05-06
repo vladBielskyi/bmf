@@ -1,7 +1,8 @@
-package ua.vbielskyi.bmf.core.repository.campaign;
+package ua.vbielskyi.bmf.core.repository.campaing;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
+import ua.vbielskyi.bmf.core.entity.campaing.CampaignProductEntity;
 
 import java.util.List;
 import java.util.UUID;

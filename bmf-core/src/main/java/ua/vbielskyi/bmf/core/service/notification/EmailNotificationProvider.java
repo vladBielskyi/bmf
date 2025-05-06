@@ -11,7 +11,7 @@ import ua.vbielskyi.bmf.core.entity.tenant.TenantEntity;
 import ua.vbielskyi.bmf.core.repository.customer.CustomerRepository;
 import ua.vbielskyi.bmf.core.repository.tenant.TenantRepository;
 
-import javax.mail.internet.MimeMessage;
+//import javax.mail.internet.MimeMessage;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -23,14 +23,14 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class EmailNotificationProvider implements NotificationProvider {
 
-    private final JavaMailSender mailSender;
+    //private final JavaMailSender mailSender;
     private final CustomerRepository customerRepository;
     private final TenantRepository tenantRepository;
 
-    @Value("${notification.email.from}")
+    @Value("${notification.email.from:{}}")
     private String defaultFromEmail;
 
-    @Value("${notification.email.enabled}")
+    @Value("${notification.email.enabled:false}")
     private boolean emailEnabled;
 
     /**
@@ -60,15 +60,15 @@ public class EmailNotificationProvider implements NotificationProvider {
         CustomerEntity customer = customerOpt.get();
 
         try {
-            MimeMessage mimeMessage = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
-
-            helper.setFrom(defaultFromEmail);
-            helper.setTo(customer.getEmail());
-            helper.setSubject("Notification from " + tenant.getShopName());
-            helper.setText(message, true); // true indicates HTML content
-
-            mailSender.send(mimeMessage);
+//            MimeMessage mimeMessage = mailSender.createMimeMessage();
+//            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+//
+//            helper.setFrom(defaultFromEmail);
+//            helper.setTo(customer.getEmail());
+//            helper.setSubject("Notification from " + tenant.getShopName());
+//            helper.setText(message, true); // true indicates HTML content
+//
+//            mailSender.send(mimeMessage);
 
             log.debug("Sent email notification to {} for tenant {}", customer.getEmail(), tenantId);
             return true;

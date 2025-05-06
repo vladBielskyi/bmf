@@ -5,10 +5,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ua.vbielskyi.bmf.common.model.subscription.SubscriptionStatus;
 import ua.vbielskyi.bmf.common.model.tenant.SubscriptionPlan;
 import ua.vbielskyi.bmf.core.entity.subscription.SubscriptionEntity;
 import ua.vbielskyi.bmf.core.entity.subscription.SubscriptionPaymentEntity;
-import ua.vbielskyi.bmf.core.entity.subscription.SubscriptionStatus;
 import ua.vbielskyi.bmf.core.entity.tenant.TenantEntity;
 import ua.vbielskyi.bmf.core.entity.tenant.TenantOwnerEntity;
 import ua.vbielskyi.bmf.core.exception.ResourceNotFoundException;
@@ -16,7 +16,7 @@ import ua.vbielskyi.bmf.core.repository.subscription.SubscriptionPaymentReposito
 import ua.vbielskyi.bmf.core.repository.subscription.SubscriptionRepository;
 import ua.vbielskyi.bmf.core.repository.tenant.TenantOwnerRepository;
 import ua.vbielskyi.bmf.core.repository.tenant.TenantRepository;
-import ua.vbielskyi.bmf.core.service.notification.AdminNotificationService;
+//import ua.vbielskyi.bmf.core.service.notification.AdminNotificationService;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -35,7 +35,7 @@ public class SubscriptionService {
     private final SubscriptionPaymentRepository paymentRepository;
     private final TenantRepository tenantRepository;
     private final TenantOwnerRepository tenantOwnerRepository;
-    private final AdminNotificationService adminNotificationService;
+   // private final AdminNotificationService adminNotificationService;
 
     // Subscription plan pricing in USD
     private static final Map<SubscriptionPlan, BigDecimal> PLAN_PRICES = Map.of(
@@ -242,7 +242,7 @@ public class SubscriptionService {
      * Handle expired subscription
      */
     @Transactional
-    private void handleExpiredSubscription(SubscriptionEntity subscription) {
+    protected void handleExpiredSubscription(SubscriptionEntity subscription) {
         UUID tenantId = subscription.getTenantId();
 
         // Downgrade to FREE plan
@@ -283,8 +283,8 @@ public class SubscriptionService {
             notificationData.put("expiryDate", subscription.getEndDate());
             notificationData.put("daysRemaining", daysUntilExpiration);
 
-            adminNotificationService.sendSubscriptionExpiringNotification(
-                    owner.getUserId(), notificationData);
+//            adminNotificationService.sendSubscriptionExpiringNotification(
+//                    owner.getUserId(), notificationData);
         }
     }
 
@@ -303,8 +303,8 @@ public class SubscriptionService {
             notificationData.put("previousPlan", subscription.getPlan());
             notificationData.put("newPlan", SubscriptionPlan.FREE);
 
-            adminNotificationService.sendSubscriptionExpiredNotification(
-                    owner.getUserId(), notificationData);
+//            adminNotificationService.sendSubscriptionExpiredNotification(
+//                    owner.getUserId(), notificationData);
         }
     }
 
@@ -323,8 +323,8 @@ public class SubscriptionService {
             notificationData.put("plan", subscription.getPlan());
             notificationData.put("cancellationReason", subscription.getCancellationReason());
 
-            adminNotificationService.sendSubscriptionCancelledNotification(
-                    owner.getUserId(), notificationData);
+//            adminNotificationService.sendSubscriptionCancelledNotification(
+//                    owner.getUserId(), notificationData);
         }
     }
 }

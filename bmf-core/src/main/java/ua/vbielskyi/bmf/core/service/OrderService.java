@@ -1,4 +1,4 @@
-package ua.vbielskyi.bmf.core.service.order;
+package ua.vbielskyi.bmf.core.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,8 +20,7 @@ import ua.vbielskyi.bmf.core.repository.order.OrderRepository;
 import ua.vbielskyi.bmf.core.repository.product.ProductRepository;
 import ua.vbielskyi.bmf.core.service.InventoryService;
 import ua.vbielskyi.bmf.core.service.OrderNumberGenerator;
-import ua.vbielskyi.bmf.core.service.cart.ShoppingCartService;
-import ua.vbielskyi.bmf.core.service.notification.NotificationService;
+import ua.vbielskyi.bmf.core.service.ShoppingCartService;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -153,10 +152,10 @@ public class OrderService {
     /**
      * Get order by ID
      */
-    public OrderEntity getOrder(UUID tenantId, UUID orderId) {
-        return orderRepository.findByIdAndTenantId(orderId, tenantId)
-                .orElseThrow(() -> new OrderNotFoundException(orderId));
-    }
+//    public OrderEntity getOrder(UUID tenantId, UUID orderId) {
+//        return orderRepository.findByIdAndTenantId(orderId, tenantId)
+//                .orElseThrow(() -> new OrderNotFoundException(orderId));
+//    }
 
     /**
      * Get customer orders
@@ -175,36 +174,36 @@ public class OrderService {
     /**
      * Update order status
      */
-    @Transactional
-    public OrderEntity updateOrderStatus(UUID tenantId, UUID orderId, OrderStatus newStatus, String updatedBy) {
-        OrderEntity order = orderRepository.findByIdAndTenantId(orderId, tenantId)
-                .orElseThrow(() -> new OrderNotFoundException(orderId));
-
-        OrderStatus previousStatus = order.getStatus();
-
-        // Validate status transition
-        if (!order.isValidStatusTransition(newStatus)) {
-            throw new IllegalStateException(
-                    String.format("Invalid order status transition from %s to %s", previousStatus, newStatus));
-        }
-
-        // Update order
-        order.setStatus(newStatus);
-        order.setUpdatedAt(LocalDateTime.now());
-        order.setUpdatedBy(updatedBy);
-
-        OrderEntity updatedOrder = orderRepository.save(order);
-
-        // Record status change in history
-        recordStatusChange(orderId, previousStatus, newStatus, updatedBy);
-
-        // Send notification based on new status
-        sendStatusUpdateNotification(updatedOrder, previousStatus);
-
-        log.info("Updated order {} status from {} to {}", orderId, previousStatus, newStatus);
-
-        return updatedOrder;
-    }
+//    @Transactional
+//    public OrderEntity updateOrderStatus(UUID tenantId, UUID orderId, OrderStatus newStatus, String updatedBy) {
+//        OrderEntity order = orderRepository.findByIdAndTenantId(orderId, tenantId)
+//                .orElseThrow(() -> new OrderNotFoundException(orderId));
+//
+//        OrderStatus previousStatus = order.getStatus();
+//
+//        // Validate status transition
+//        if (!order.isValidStatusTransition(newStatus)) {
+//            throw new IllegalStateException(
+//                    String.format("Invalid order status transition from %s to %s", previousStatus, newStatus));
+//        }
+//
+//        // Update order
+//        order.setStatus(newStatus);
+//        order.setUpdatedAt(LocalDateTime.now());
+//        order.setUpdatedBy(updatedBy);
+//
+//        OrderEntity updatedOrder = orderRepository.save(order);
+//
+//        // Record status change in history
+//        recordStatusChange(orderId, previousStatus, newStatus, updatedBy);
+//
+//        // Send notification based on new status
+//        sendStatusUpdateNotification(updatedOrder, previousStatus);
+//
+//        log.info("Updated order {} status from {} to {}", orderId, previousStatus, newStatus);
+//
+//        return updatedOrder;
+//    }
 
     /**
      * Record status change in history
@@ -260,47 +259,47 @@ public class OrderService {
     /**
      * Cancel order
      */
-    @Transactional
-    public OrderEntity cancelOrder(UUID tenantId, UUID orderId, String reason, String cancelledBy) {
-        OrderEntity order = orderRepository.findByIdAndTenantId(orderId, tenantId)
-                .orElseThrow(() -> new OrderNotFoundException(orderId));
-
-        // Can only cancel orders in NEW or CONFIRMED status
-        if (order.getStatus() != OrderStatus.NEW && order.getStatus() != OrderStatus.CONFIRMED) {
-            throw new IllegalStateException("Cannot cancel order in " + order.getStatus() + " status");
-        }
-
-        OrderStatus previousStatus = order.getStatus();
-
-        // Update order
-        order.setStatus(OrderStatus.CANCELLED);
-        order.setNotes(order.getNotes() != null ?
-                order.getNotes() + "\nCancellation reason: " + reason :
-                "Cancellation reason: " + reason);
-        order.setUpdatedAt(LocalDateTime.now());
-        order.setUpdatedBy(cancelledBy);
-
-        OrderEntity cancelledOrder = orderRepository.save(order);
-
-        // Record status change in history
-        recordStatusChange(orderId, previousStatus, OrderStatus.CANCELLED, cancelledBy);
-
-        // Restore inventory
-        List<OrderItemEntity> items = orderItemRepository.findAllByOrderId(orderId);
-        for (OrderItemEntity item : items) {
-            if (order.getLocationId() != null) {
-                inventoryService.increaseStockAtLocation(
-                        item.getProductId(), order.getLocationId(), item.getQuantity());
-            } else {
-                inventoryService.increaseStock(item.getProductId(), item.getQuantity());
-            }
-        }
-
-        // Send cancellation notification
-        notificationService.sendCancellationNotification(cancelledOrder);
-
-        log.info("Cancelled order {}, reason: {}", orderId, reason);
-
-        return cancelledOrder;
-    }
+//    @Transactional
+//    public OrderEntity cancelOrder(UUID tenantId, UUID orderId, String reason, String cancelledBy) {
+//        OrderEntity order = orderRepository.findByIdAndTenantId(orderId, tenantId)
+//                .orElseThrow(() -> new OrderNotFoundException(orderId));
+//
+//        // Can only cancel orders in NEW or CONFIRMED status
+//        if (order.getStatus() != OrderStatus.NEW && order.getStatus() != OrderStatus.CONFIRMED) {
+//            throw new IllegalStateException("Cannot cancel order in " + order.getStatus() + " status");
+//        }
+//
+//        OrderStatus previousStatus = order.getStatus();
+//
+//        // Update order
+//        order.setStatus(OrderStatus.CANCELLED);
+//        order.setNotes(order.getNotes() != null ?
+//                order.getNotes() + "\nCancellation reason: " + reason :
+//                "Cancellation reason: " + reason);
+//        order.setUpdatedAt(LocalDateTime.now());
+//        order.setUpdatedBy(cancelledBy);
+//
+//        OrderEntity cancelledOrder = orderRepository.save(order);
+//
+//        // Record status change in history
+//        recordStatusChange(orderId, previousStatus, OrderStatus.CANCELLED, cancelledBy);
+//
+//        // Restore inventory
+//        List<OrderItemEntity> items = orderItemRepository.findAllByOrderId(orderId);
+//        for (OrderItemEntity item : items) {
+//            if (order.getLocationId() != null) {
+//                inventoryService.increaseStockAtLocation(
+//                        item.getProductId(), order.getLocationId(), item.getQuantity());
+//            } else {
+//                inventoryService.increaseStock(item.getProductId(), item.getQuantity());
+//            }
+//        }
+//
+//        // Send cancellation notification
+//        notificationService.sendCancellationNotification(cancelledOrder);
+//
+//        log.info("Cancelled order {}, reason: {}", orderId, reason);
+//
+//        return cancelledOrder;
+//    }
 }

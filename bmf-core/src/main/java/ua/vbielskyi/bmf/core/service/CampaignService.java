@@ -1,25 +1,25 @@
-package ua.vbielskyi.bmf.core.service.campaign;
+package ua.vbielskyi.bmf.core.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import ua.vbielskyi.bmf.core.entity.campaign.CampaignEntity;
-import ua.vbielskyi.bmf.core.entity.campaign.CampaignProductEntity;
-import ua.vbielskyi.bmf.core.entity.campaign.CampaignType;
+import ua.vbielskyi.bmf.common.model.campaing.CampaignType;
+import ua.vbielskyi.bmf.core.entity.campaing.CampaignEntity;
+import ua.vbielskyi.bmf.core.entity.campaing.CampaignProductEntity;
 import ua.vbielskyi.bmf.core.entity.customer.CustomerEntity;
 import ua.vbielskyi.bmf.core.entity.product.ProductEntity;
 import ua.vbielskyi.bmf.core.entity.tenant.TenantEntity;
-import ua.vbielskyi.bmf.core.repository.campaign.CampaignProductRepository;
-import ua.vbielskyi.bmf.core.repository.campaign.CampaignRepository;
+import ua.vbielskyi.bmf.core.exception.ResourceNotFoundException;
+import ua.vbielskyi.bmf.core.repository.campaing.CampaignProductRepository;
+import ua.vbielskyi.bmf.core.repository.campaing.CampaignRepository;
 import ua.vbielskyi.bmf.core.repository.customer.CustomerRepository;
 import ua.vbielskyi.bmf.core.repository.product.ProductRepository;
 import ua.vbielskyi.bmf.core.repository.tenant.TenantRepository;
-import ua.vbielskyi.bmf.core.service.notification.NotificationService;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.Month;
 import java.util.ArrayList;
 import java.util.List;
@@ -226,12 +226,12 @@ public class CampaignService {
         int sentCount = 0;
         for (CustomerEntity customer : customers) {
             try {
-                boolean sent = notificationService.sendPromotionalNotification(
-                        tenantId, customer.getTelegramId(), campaign.getName(), message);
-
-                if (sent) {
-                    sentCount++;
-                }
+//                boolean sent = notificationService.sendPromotionalNotification(
+//                        tenantId, customer.getTelegramId(), campaign.getName(), message);
+//
+//                if (sent) {
+//                    sentCount++;
+//                }
             } catch (Exception e) {
                 log.error("Error sending campaign notification to customer: {}", customer.getId(), e);
             }
@@ -314,8 +314,8 @@ public class CampaignService {
                 tenantId,
                 "Mother's Day Collection",
                 "Show mom how much you care with our special Mother's Day flowers!",
-                LocalDateTime.of(mothersDay.minusDays(14), 0, 0),
-                LocalDateTime.of(mothersDay, 23, 59),
+                LocalDateTime.of(mothersDay.minusDays(14), LocalTime.MIDNIGHT),
+                LocalDateTime.of(mothersDay, LocalTime.MIDNIGHT),
                 CampaignType.HOLIDAY,
                 BigDecimal.valueOf(10)
         ));

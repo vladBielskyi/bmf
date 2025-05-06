@@ -9,13 +9,13 @@ import ua.vbielskyi.bmf.common.model.order.PaymentMethod;
 import ua.vbielskyi.bmf.common.model.order.PaymentStatus;
 import ua.vbielskyi.bmf.core.entity.order.OrderEntity;
 import ua.vbielskyi.bmf.core.entity.order.PaymentEntity;
+import ua.vbielskyi.bmf.core.exception.ResourceNotFoundException;
 import ua.vbielskyi.bmf.core.repository.order.OrderRepository;
 import ua.vbielskyi.bmf.core.repository.order.PaymentRepository;
-import ua.vbielskyi.bmf.core.service.notification.NotificationService;
-import ua.vbielskyi.bmf.core.service.order.OrderWorkflowService;
 
 import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 @Slf4j
@@ -27,7 +27,7 @@ public class PaymentService {
     private final OrderRepository orderRepository;
     private final OrderWorkflowService orderWorkflowService;
     private final NotificationService notificationService;
-    private final Map<PaymentMethod, PaymentProvider> paymentProviders;
+   // private final Map<PaymentMethod, PaymentProvider> paymentProviders;
 
     /**
      * Create a payment for an order
@@ -181,13 +181,14 @@ public class PaymentService {
      * Get payment provider for payment method
      */
     private PaymentProvider getPaymentProvider(PaymentMethod paymentMethod) {
-        PaymentProvider provider = paymentProviders.get(paymentMethod);
-
-        if (provider == null) {
-            throw new IllegalArgumentException("No payment provider configured for method: " + paymentMethod);
-        }
-
-        return provider;
+//        PaymentProvider provider = paymentProviders.get(paymentMethod);
+//
+//        if (provider == null) {
+//            throw new IllegalArgumentException("No payment provider configured for method: " + paymentMethod);
+//        }
+//
+//        return provider;
+        return null;
     }
 
     /**

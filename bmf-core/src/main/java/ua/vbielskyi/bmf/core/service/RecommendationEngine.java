@@ -1,4 +1,4 @@
-package ua.vbielskyi.bmf.core.service.recommendation;
+package ua.vbielskyi.bmf.core.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,14 +40,14 @@ public class RecommendationEngine {
         }
 
         // Get customer analytics
-        Optional<CustomerAnalyticsEntity> analytics = customerAnalyticsRepository
-                .findByTenantIdAndCustomerId(tenantId, customerOrders.get(0).getCustomerId());
-
-        // If we have analytics with favorite category, use it
-        if (analytics.isPresent() && analytics.get().getFavoriteCategoryId() != null) {
-            return getRecommendationsByCategory(tenantId, analytics.get().getFavoriteCategoryId(),
-                    getRecentlyPurchasedProductIds(customerOrders), limit);
-        }
+//        Optional<CustomerAnalyticsEntity> analytics = customerAnalyticsRepository
+//                .findByTenantIdAndCustomerId(tenantId, customerOrders.get(0).getCustomerId());
+//
+//        // If we have analytics with favorite category, use it
+//        if (analytics.isPresent() && analytics.get().getFavoriteCategoryId() != null) {
+//            return getRecommendationsByCategory(tenantId, analytics.get().getFavoriteCategoryId(),
+//                    getRecentlyPurchasedProductIds(customerOrders), limit);
+//        }
 
         // Otherwise use collaborative filtering approach
         return getCollaborativeFilteringRecommendations(tenantId, customerOrders, limit);
@@ -307,25 +307,25 @@ public class RecommendationEngine {
 
         for (UUID productId : purchasedProductIds) {
             // Find order items for this product
-            List<OrderItemEntity> items = orderItemRepository.findAllByProductId(productId);
-
-            // Get order IDs
-            List<UUID> orderIds = items.stream()
-                    .map(OrderItemEntity::getOrderId)
-                    .collect(Collectors.toList());
-
-            // Get orders from this tenant
-            List<OrderEntity> orders = orderRepository.findAllById(orderIds)
-                    .stream()
-                    .filter(o -> o.getTenantId().equals(tenantId))
-                    .collect(Collectors.toList());
-
-            // Get customer IDs
-            for (OrderEntity order : orders) {
-                if (!similarCustomerIds.contains(order.getCustomerId())) {
-                    similarCustomerIds.add(order.getCustomerId());
-                }
-            }
+//            List<OrderItemEntity> items = orderItemRepository.findAllByProductId(productId);
+//
+//            // Get order IDs
+//            List<UUID> orderIds = items.stream()
+//                    .map(OrderItemEntity::getOrderId)
+//                    .collect(Collectors.toList());
+//
+//            // Get orders from this tenant
+//            List<OrderEntity> orders = orderRepository.findAllById(orderIds)
+//                    .stream()
+//                    .filter(o -> o.getTenantId().equals(tenantId))
+//                    .collect(Collectors.toList());
+//
+//            // Get customer IDs
+//            for (OrderEntity order : orders) {
+//                if (!similarCustomerIds.contains(order.getCustomerId())) {
+//                    similarCustomerIds.add(order.getCustomerId());
+//                }
+//            }
         }
 
         return similarCustomerIds;

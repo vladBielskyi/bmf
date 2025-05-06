@@ -1,4 +1,4 @@
-package ua.vbielskyi.bmf.core.service.cart;
+package ua.vbielskyi.bmf.core.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

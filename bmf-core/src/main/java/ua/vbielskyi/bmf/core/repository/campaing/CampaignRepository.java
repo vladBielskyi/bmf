@@ -3,6 +3,7 @@ package ua.vbielskyi.bmf.core.repository.campaing;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import ua.vbielskyi.bmf.common.model.campaing.CampaignType;
+import ua.vbielskyi.bmf.core.entity.campaing.CampaignEntity;
 
 import java.time.LocalDateTime;
 import java.util.List;

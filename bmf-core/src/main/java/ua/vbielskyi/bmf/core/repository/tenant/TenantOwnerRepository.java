@@ -20,7 +20,4 @@ public interface TenantOwnerRepository extends JpaRepository<TenantOwnerEntity, 
 
     @Query("SELECT to.tenantId FROM TenantOwnerEntity to WHERE to.userId = :userId")
     List<UUID> findTenantIdsByUserId(@Param("userId") Long userId);
-
-    // Custom method, would need implementation
-    void addOwnership(Long userId, UUID tenantId);
 }

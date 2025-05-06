@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import ua.vbielskyi.bmf.common.model.loyalty.LoyaltyTransactionType;
 import ua.vbielskyi.bmf.core.tenant.entity.TenantAware;
 
 import java.time.LocalDateTime;

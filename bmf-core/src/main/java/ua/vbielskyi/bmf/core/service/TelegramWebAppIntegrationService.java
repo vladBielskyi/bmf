@@ -13,7 +13,6 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMa
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.webapp.WebAppInfo;
 import ua.vbielskyi.bmf.core.entity.bot.WebAppSettingsEntity;
-import ua.vbielskyi.bmf.core.entity.customer.CustomerEntity;
 import ua.vbielskyi.bmf.core.entity.order.OrderEntity;
 import ua.vbielskyi.bmf.core.entity.tenant.TenantEntity;
 import ua.vbielskyi.bmf.core.exception.ResourceNotFoundException;
@@ -25,7 +24,10 @@ import ua.vbielskyi.bmf.core.telegram.model.BotType;
 import ua.vbielskyi.bmf.core.telegram.service.BotExecutor;
 
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -36,7 +38,7 @@ public class TelegramWebAppIntegrationService {
     private final CustomerRepository customerRepository;
     private final TenantRepository tenantRepository;
     private final BotExecutor botExecutor;
-    private final ua.vbielskyi.bmf.core.service.webapp.WebAppIntegrationService webAppIntegrationService;
+    private final WebAppIntegrationService webAppIntegrationService;
 
     @Value("${telegram.payment.provider-token}")
     private String paymentProviderToken;

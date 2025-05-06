@@ -64,7 +64,7 @@ public class TenantInterceptor implements HandlerInterceptor {
                 return false;
             }
 
-            if (!tenant.get().isActive()) {
+            if (!tenant.get().getActive()) {
                 log.warn("Tenant is inactive: {}", uuid);
                 response.setStatus(HttpStatus.FORBIDDEN.value());
                 response.getWriter().write("Tenant is inactive");

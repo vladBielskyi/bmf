@@ -1,4 +1,4 @@
-package ua.vbielskyi.bmf.core.service.notification;
+package ua.vbielskyi.bmf.core.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -8,6 +8,9 @@ import ua.vbielskyi.bmf.core.entity.notification.NotificationTemplateEntity;
 import ua.vbielskyi.bmf.core.entity.order.OrderEntity;
 import ua.vbielskyi.bmf.core.repository.notification.NotificationHistoryRepository;
 import ua.vbielskyi.bmf.core.repository.notification.NotificationTemplateRepository;
+import ua.vbielskyi.bmf.core.service.notification.EmailNotificationProvider;
+import ua.vbielskyi.bmf.core.service.notification.SmsNotificationProvider;
+import ua.vbielskyi.bmf.core.service.notification.TelegramNotificationProvider;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;

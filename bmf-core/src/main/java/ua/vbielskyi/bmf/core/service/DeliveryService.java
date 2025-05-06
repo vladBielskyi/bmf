@@ -1,4 +1,4 @@
-package ua.vbielskyi.bmf.core.service.delivery;
+package ua.vbielskyi.bmf.core.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,16 +12,10 @@ import ua.vbielskyi.bmf.core.exception.ResourceNotFoundException;
 import ua.vbielskyi.bmf.core.repository.order.DeliveryRepository;
 import ua.vbielskyi.bmf.core.repository.order.OrderRepository;
 import ua.vbielskyi.bmf.core.repository.tenant.TenantLocationRepository;
-import ua.vbielskyi.bmf.core.service.location.LocationService;
-import ua.vbielskyi.bmf.core.service.notification.NotificationService;
-import ua.vbielskyi.bmf.core.service.order.OrderWorkflowService;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
