@@ -44,7 +44,7 @@ public class LanguageCallbackHandler implements CallbackQueryHandler {
         BotResponse response = BotResponse.text(message.getChatId(), confirmMessage);
 
         // Add main menu command
-        response.addMethod(BotResponse.createCommand(message.getChatId(), "/start"));
+       // response.addMethod(BotResponse.createCommand(message.getChatId(), "/start"));
 
         return response;
     }

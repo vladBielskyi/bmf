@@ -41,8 +41,8 @@ public class MyShopsCommandHandler implements CommandHandler {
                     "register_shop"
             ));
             inlineKeyboard.add(row);
-
-            return BotResponse.createWithInlineKeyboard(message.getChatId(), noShopsMessage, inlineKeyboard);
+return null;
+            //return BotResponse.createWithInlineKeyboard(message.getChatId(), noShopsMessage, inlineKeyboard);
         } else {
             // Show list of shops
             StringBuilder shopsMessage = new StringBuilder();
@@ -54,7 +54,7 @@ public class MyShopsCommandHandler implements CommandHandler {
             for (TenantEntity shop : shops) {
                 shopsMessage.append("🌸 *").append(shop.getShopName()).append("*\n");
                 shopsMessage.append("  ").append(localizationService.getMessage("shops.status", message.getUserId())).append(": ");
-                shopsMessage.append(shop.isActive() ? "✅" : "❌").append("\n");
+                shopsMessage.append(shop.getActive() ? "✅" : "❌").append("\n");
                 shopsMessage.append("  ").append(localizationService.getMessage("shops.subscription", message.getUserId())).append(": ");
                 shopsMessage.append(shop.getSubscriptionPlan()).append("\n\n");
 
@@ -75,7 +75,8 @@ public class MyShopsCommandHandler implements CommandHandler {
             ));
             inlineKeyboard.add(lastRow);
 
-            return BotResponse.createWithInlineKeyboard(message.getChatId(), shopsMessage.toString(), inlineKeyboard);
+            return null;
+            //return BotResponse.createWithInlineKeyboard(message.getChatId(), shopsMessage.toString(), inlineKeyboard);
         }
     }
 

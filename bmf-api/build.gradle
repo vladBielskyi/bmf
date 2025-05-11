@@ -4,6 +4,8 @@ plugins {
 
 dependencies {
     implementation project(':bmf-core')
+    implementation project(':bmf-tg-admin')
+    implementation project(':bmf-tg-tenant')
 
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-validation'

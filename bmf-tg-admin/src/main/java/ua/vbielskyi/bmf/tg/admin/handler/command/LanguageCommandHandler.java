@@ -45,7 +45,8 @@ public class LanguageCommandHandler implements CommandHandler {
         row.add(createInlineButton("🇬🇧 English", "lang_en"));
         inlineKeyboard.add(row);
 
-        return BotResponse.createWithInlineKeyboard(message.getChatId(), langMessage, inlineKeyboard);
+       // return BotResponse.createWithInlineKeyboard(message.getChatId(), langMessage, inlineKeyboard);
+        return null;
     }
 
     private Object createInlineButton(String text, String callbackData) {

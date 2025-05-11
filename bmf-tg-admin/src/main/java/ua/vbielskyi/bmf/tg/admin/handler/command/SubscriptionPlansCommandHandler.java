@@ -52,7 +52,8 @@ public class SubscriptionPlansCommandHandler implements CommandHandler {
 
         inlineKeyboard.add(row);
 
-        return BotResponse.createWithInlineKeyboard(message.getChatId(), plansMessage.toString(), inlineKeyboard);
+        return null;
+       // return BotResponse.createWithInlineKeyboard(message.getChatId(), plansMessage.toString(), inlineKeyboard);
     }
 
     private Object createWebButton(String text, String url) {

@@ -7,6 +7,7 @@ import ua.vbielskyi.bmf.core.entity.tenant.TenantEntity;
 import ua.vbielskyi.bmf.core.repository.tenant.TenantOwnerRepository;
 import ua.vbielskyi.bmf.core.repository.tenant.TenantRepository;
 import ua.vbielskyi.bmf.core.service.TenantOnboardingService;
+import ua.vbielskyi.bmf.core.telegram.model.BotType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -60,19 +61,6 @@ public class TenantManagementService {
         } catch (Exception e) {
             log.error("Error creating shop", e);
             throw e;
-        }
-    }
-
-    /**
-     * Toggle shop bot activation status
-     */
-    public boolean toggleBotStatus(UUID shopId, boolean active) {
-        try {
-            // This uses the existing CachedBotRegistry to update the bot status
-            return botRegistry.updateBotActiveStatus(BotType.TENANT, shopId, active);
-        } catch (Exception e) {
-            log.error("Error toggling bot status for shop: {}", shopId, e);
-            return false;
         }
     }
 }

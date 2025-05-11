@@ -3,6 +3,7 @@ package ua.vbielskyi.bmf.tg.admin.handler.flow;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import ua.vbielskyi.bmf.core.entity.tenant.TenantEntity;
 import ua.vbielskyi.bmf.core.telegram.model.BotMessage;
 import ua.vbielskyi.bmf.core.telegram.model.BotResponse;
 import ua.vbielskyi.bmf.tg.admin.model.UserSession;
@@ -97,10 +98,10 @@ public class ShopRegistrationFlowHandler {
         }
 
         // Check if token already in use
-        if (tenantService.isBotTokenInUse(text)) {
-            return BotResponse.text(message.getChatId(),
-                    localizationService.getMessage("shop.register.token_in_use", message.getUserId()));
-        }
+//        if (tenantService.isBotTokenInUse(text)) {
+//            return BotResponse.text(message.getChatId(),
+//                    localizationService.getMessage("shop.register.token_in_use", message.getUserId()));
+//        }
 
         // Store bot token
         session.setAttribute("botToken", text);
@@ -124,10 +125,10 @@ public class ShopRegistrationFlowHandler {
         }
 
         // Check if username already in use
-        if (tenantService.isBotUsernameInUse(username)) {
-            return BotResponse.text(message.getChatId(),
-                    localizationService.getMessage("shop.register.username_in_use", message.getUserId()));
-        }
+//        if (tenantService.isBotUsernameInUse(username)) {
+//            return BotResponse.text(message.getChatId(),
+//                    localizationService.getMessage("shop.register.username_in_use", message.getUserId()));
+//        }
 
         // Store bot username
         session.setAttribute("botUsername", username);
@@ -196,7 +197,8 @@ public class ShopRegistrationFlowHandler {
                 ));
                 inlineKeyboard.add(row);
 
-                return BotResponse.createWithInlineKeyboard(message.getChatId(), successMessage.toString(), inlineKeyboard);
+                return null;
+               // return BotResponse.createWithInlineKeyboard(message.getChatId(), successMessage.toString(), inlineKeyboard);
 
             } catch (Exception e) {
                 log.error("Error registering shop", e);

@@ -59,6 +59,7 @@ public class StartCommandHandler implements CommandHandler {
         row3.add(localizationService.getMessage("button.language", message.getUserId()));
         keyboard.add(row3);
 
-        return BotResponse.createWithReplyKeyboard(message.getChatId(), welcomeMessage, keyboard);
+        return null;
+       // return BotResponse.createWithReplyKeyboard(message.getChatId(), welcomeMessage, keyboard);
     }
 }

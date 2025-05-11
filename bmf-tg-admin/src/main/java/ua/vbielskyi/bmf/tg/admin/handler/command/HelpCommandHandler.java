@@ -62,7 +62,8 @@ public class HelpCommandHandler implements CommandHandler {
         ));
         inlineKeyboard.add(row2);
 
-        return BotResponse.createWithInlineKeyboard(message.getChatId(), helpText.toString(), inlineKeyboard);
+       // return BotResponse.createWithInlineKeyboard(message.getChatId(), helpText.toString(), inlineKeyboard);
+        return null;
     }
 
     private Object createWebButton(String text, String url) {

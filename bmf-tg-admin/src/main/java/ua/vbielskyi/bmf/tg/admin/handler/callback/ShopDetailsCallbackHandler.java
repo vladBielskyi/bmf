@@ -6,6 +6,7 @@ import ua.vbielskyi.bmf.core.entity.tenant.TenantEntity;
 import ua.vbielskyi.bmf.core.telegram.handler.CallbackQueryHandler;
 import ua.vbielskyi.bmf.core.telegram.model.BotMessage;
 import ua.vbielskyi.bmf.core.telegram.model.BotResponse;
+import ua.vbielskyi.bmf.core.telegram.model.BotType;
 import ua.vbielskyi.bmf.core.telegram.service.impl.CachedBotRegistry;
 import ua.vbielskyi.bmf.tg.admin.service.LocalizationService;
 import ua.vbielskyi.bmf.tg.admin.service.TenantManagementService;
@@ -53,7 +54,7 @@ public class ShopDetailsCallbackHandler implements CallbackQueryHandler {
         shopInfo.append(shop.getDescription() != null ? shop.getDescription() : "-").append("\n\n");
 
         shopInfo.append("📊 ").append(localizationService.getMessage("shops.status", message.getUserId())).append(": ");
-        shopInfo.append(shop.isActive() ? "✅" : "❌").append("\n");
+        shopInfo.append(shop.getActive() ? "✅" : "❌").append("\n");
 
         shopInfo.append("🤖 ").append(localizationService.getMessage("shops.bot_status", message.getUserId())).append(": ");
         shopInfo.append(botActive ? "✅" : "❌").append("\n");
@@ -111,7 +112,8 @@ public class ShopDetailsCallbackHandler implements CallbackQueryHandler {
         ));
         inlineKeyboard.add(row3);
 
-        return BotResponse.createWithInlineKeyboard(message.getChatId(), shopInfo.toString(), inlineKeyboard);
+       // return BotResponse.createWithInlineKeyboard(message.getChatId(), shopInfo.toString(), inlineKeyboard);
+        return null;
     }
 
     private Object createInlineButton(String text, String callbackData) {
