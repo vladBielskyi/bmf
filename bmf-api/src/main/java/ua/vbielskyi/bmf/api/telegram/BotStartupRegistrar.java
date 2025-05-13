@@ -84,7 +84,8 @@ public class BotStartupRegistrar {
                 adminBotToken,
                 adminBotUsername,
                 webhookUrl,
-                null
+                null,
+                86400L
         );
 
         if (success) {
@@ -166,7 +167,8 @@ public class BotStartupRegistrar {
                     tenant.getTelegramBotToken(),
                     tenant.getTelegramBotUsername(),
                     webhookUrl,
-                    tenant.getId()
+                    tenant.getId(),
+                    86400L
             );
 
             if (success) {

@@ -98,7 +98,8 @@ public class CachedBotRegistry implements BotRegistry {
      * @param tenantId Tenant ID (null for admin bot)
      * @return true if registration was successful
      */
-    public boolean registerBot(BotType botType, String token, String username, String webhookUrl, UUID tenantId) {
+    public boolean registerBot(BotType botType, String token, String username, String webhookUrl, UUID tenantId,
+                               Long cacheExpirationSeconds) {
         try {
             validateBotParameters(botType, token, username, webhookUrl);
 
@@ -109,8 +110,10 @@ public class CachedBotRegistry implements BotRegistry {
             String configKey = getBotConfigKey(botType, tenantId);
             String tokenKey = BOT_TOKEN_KEY_PREFIX + token;
 
-            cacheService.put(configKey, json, cacheExpiration, TimeUnit.SECONDS);
-            cacheService.put(tokenKey, json, cacheExpiration, TimeUnit.SECONDS);
+            cacheService.put(configKey, json, cacheExpirationSeconds == null ? cacheExpiration
+                    : cacheExpirationSeconds, TimeUnit.SECONDS);
+            cacheService.put(tokenKey, json, cacheExpirationSeconds == null ? cacheExpiration
+                    : cacheExpirationSeconds, TimeUnit.SECONDS);
 
             // For tenant bots, add to the list of tenant bots
             if (tenantId != null) {

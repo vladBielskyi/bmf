@@ -18,7 +18,8 @@ public interface BotRegistrationService {
      * @param tenantId Tenant ID (null for admin bot)
      * @return True if registration was successful
      */
-    boolean registerBot(BotType botType, String token, String username, String webhookUrl, UUID tenantId);
+    boolean registerBot(BotType botType, String token, String username, String webhookUrl, UUID tenantId,
+                        Long cacheExpirySeconds);
 
     /**
      * Unregister a bot from Telegram

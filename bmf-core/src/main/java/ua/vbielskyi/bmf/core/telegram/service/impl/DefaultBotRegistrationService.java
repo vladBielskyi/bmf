@@ -16,7 +16,6 @@ import ua.vbielskyi.bmf.core.telegram.model.BotType;
 import ua.vbielskyi.bmf.core.telegram.service.BotRegistrationService;
 
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Implementation of BotRegistrationService that uses Telegram API
@@ -44,7 +43,8 @@ public class DefaultBotRegistrationService implements BotRegistrationService {
             maxAttempts = MAX_RETRIES,
             backoff = @Backoff(delay = RETRY_DELAY, multiplier = 2)
     )
-    public boolean registerBot(BotType botType, String token, String username, String webhookUrl, UUID tenantId) {
+    public boolean registerBot(BotType botType, String token, String username, String webhookUrl, UUID tenantId,
+                               Long cacheExpirationSeconds) {
         try {
             log.info("Registering bot: {}, tenant: {}", username, tenantId);
 
@@ -56,16 +56,7 @@ public class DefaultBotRegistrationService implements BotRegistrationService {
 
             if (success) {
                 // Store in registry cache
-                botRegistry.registerBot(botType, token, username, webhookUrl, tenantId);
-
-                // Cache expiration
-                if (botType.isTenant()) {
-                    // Tenant bots expire after 24 hours
-                    TimeUnit.HOURS.sleep(24);
-                } else {
-                    // Admin bot doesn't expire
-                    TimeUnit.DAYS.sleep(90);
-                }
+                botRegistry.registerBot(botType, token, username, webhookUrl, tenantId, cacheExpirationSeconds);
 
                 log.info("Successfully registered bot: {}, tenant: {}", username, tenantId);
             } else {
@@ -79,10 +70,6 @@ public class DefaultBotRegistrationService implements BotRegistrationService {
         } catch (HttpServerErrorException e) {
             log.error("Telegram API server error: {}", e.getMessage(), e);
             throw new BotRegistrationException("Telegram API server error: " + e.getMessage(), e);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            log.error("Thread interrupted during bot registration", e);
-            throw new BotRegistrationException("Thread interrupted during bot registration", e);
         } catch (Exception e) {
             log.error("Error registering bot: {}, tenant: {}", username, tenantId, e);
             throw new BotRegistrationException("Error registering bot: " + e.getMessage(), e);
@@ -150,7 +137,8 @@ public class DefaultBotRegistrationService implements BotRegistrationService {
                         config.getToken(),
                         config.getUsername(),
                         newWebhookUrl,
-                        config.getTenantId()
+                        config.getTenantId(),
+                        86400L
                 );
 
                 log.info("Successfully updated webhook for bot, tenant: {}", tenantId);
